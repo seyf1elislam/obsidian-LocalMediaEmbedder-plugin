@@ -23,7 +23,14 @@ The Local Media Embedder plugin for Obsidian allows you to easily embed local me
 4. The media file will be embedded into your note at the cursor position.
 
 ## screenshots
+> using command palette
+
 ![](image.gif)
+
+> using editor menu 
+
+![](image2.gif)
+
 
 ## Contributing
 
