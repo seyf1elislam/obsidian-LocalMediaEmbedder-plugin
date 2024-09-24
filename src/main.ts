@@ -27,7 +27,6 @@ export default class MyPlugin extends Plugin {
 		this.serverRunning = true;
 
 		if (this.settings.showInRibbon) {
-			
 			this.toggleRibbon = this.addRibbonIcon(
 				"server",
 				"Toggle Media server",
@@ -51,55 +50,35 @@ export default class MyPlugin extends Plugin {
 			id: "embed-in-iframe-0",
 			name: "Embed in Iframe tag",
 			editorCallback(editor: Editor, ctx) {
-				try {
-					embedMedia(editor, this.settings, "iframe");
-				} catch (error) {
-					console.log("error :", error);
-				}
+				embedMedia(editor, this.settings, "iframe");
 			},
 		});
 		this.addCommand({
 			id: "embed-in-videotag-LocalMedia",
 			name: "Embed in video tag",
 			editorCallback(editor: Editor, ctx) {
-				try {
-					embedMedia(editor, this.settings, "video");
-				} catch (error) {
-					console.log("error :", error);
-				}
+				embedMedia(editor, this.settings, "video");
 			},
 		});
 		this.addCommand({
 			id: "embed-in-audiotag-LocalMedia",
 			name: "Embed in audio tag",
 			editorCallback(editor: Editor, ctx) {
-				try {
-					embedMedia(editor, this.settings, "audio");
-				} catch (error) {
-					console.log("error :", error);
-				}
+				embedMedia(editor, this.settings, "audio");
 			},
 		});
 		this.addCommand({
 			id: "embed-in-imagetag-LocalMedia",
 			name: "Embed in image tag",
 			editorCallback(editor: Editor, ctx) {
-				try {
-					embedMedia(editor, this.settings, "image");
-				} catch (error) {
-					console.log("error :", error);
-				}
+				embedMedia(editor, this.settings, "image");
 			},
 		});
 		this.addCommand({
 			id: "embed-in-auto-localMedia",
 			name: "Embed auto",
 			editorCallback(editor: Editor, ctx) {
-				try {
-					embedMedia(editor, this.settings, "auto");
-				} catch (error) {
-					console.log("error :", error);
-				}
+				embedMedia(editor, this.settings, "auto");
 			},
 		});
 
@@ -114,32 +93,26 @@ export default class MyPlugin extends Plugin {
 		);
 
 		this.statusElement = this.addStatusBarItem();
-		this.serverStatusUpdatedInterval_ID = setInterval(
-			() => {
-				// const serverStatus = this.serverRunning;
-				const statusText = this.serverRunning
-					? "Local Media Server Active🟢"
-					: "Local Media Server ServerInactive 🔴";
-				const statusElement = document.querySelector(
-					"#local-media-server-status"
-				);
+		this.serverStatusUpdatedInterval_ID = setInterval(() => {
+			const statusText = this.serverRunning
+				? "Local Media Server Active🟢"
+				: "Local Media Server ServerInactive 🔴";
+			const statusElement = document.querySelector(
+				"#local-media-server-status"
+			);
 
-				if (this.statusElement && statusElement) {
-					statusElement.textContent = statusText;
-				} else {
-					this.statusElement.createEl("span", {
-						text: statusText,
-						attr: {
-							id: "local-media-server-status",
-							cls: "status-bar-item",
-							
-						},
-					});
-				}
-			},
-			1000
-		);
-
+			if (this.statusElement && statusElement) {
+				statusElement.textContent = statusText;
+			} else {
+				this.statusElement.createEl("span", {
+					text: statusText,
+					attr: {
+						id: "local-media-server-status",
+						cls: "status-bar-item",
+					},
+				});
+			}
+		}, 1000);
 	}
 
 	async loadSettings() {
@@ -157,6 +130,6 @@ export default class MyPlugin extends Plugin {
 		this.server.stopServer();
 		await this.saveSettings();
 		clearInterval(this.serverStatusUpdatedInterval_ID);
-		
+		this.statusElement.remove();
 	}
 }
