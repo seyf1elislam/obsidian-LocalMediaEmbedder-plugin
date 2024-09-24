@@ -101,6 +101,10 @@ export default class MyPlugin extends Plugin {
 				});
 			}
 		}, 1000);
+
+		this.statusElement.addEventListener("click", () => {
+			this.toggleServer();
+		});
 	}
 
 	private toggleServer = () => {
