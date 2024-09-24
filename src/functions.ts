@@ -79,28 +79,30 @@ export function onEditorMenu(
 	if (!showInMenuItem) return;
 
 	menu.addItem((item: MenuItem) => {
-		item.setTitle("Embed link in video tag [LocalMedia]")
-			.setIcon("link")
-			.onClick(async () => {
-				if (!editor) return;
-				embedMedia(editor, DEFAULT_SETTINGS, "video");
-			});
-	});
-	menu.addItem((item: MenuItem) => {
-		item.setTitle("Embed link in audio tag [LocalMedia]")
-			.setIcon("link")
-			.onClick(async () => {
-				if (!editor) return;
-				embedMedia(editor, DEFAULT_SETTINGS, "audio");
-			});
-	});
-	menu.addItem((item: MenuItem) => {
-		item.setTitle("Embed auto [LocalMedia]")
+		item.setTitle("Embed selected link  [LocalMediaEmbed]")
 			.setIcon("link")
 			.onClick(async () => {
 				if (!editor) return;
 				embedMedia(editor, DEFAULT_SETTINGS, "auto");
 			});
 	});
+
+	// menu.addItem((item: MenuItem) => {
+	// 	item.setTitle("Embed link in video tag [LocalMedia]")
+	// 		.setIcon("link")
+	// 		.onClick(async () => {
+	// 			if (!editor) return;
+	// 			embedMedia(editor, DEFAULT_SETTINGS, "video");
+	// 		});
+	// });
+	// menu.addItem((item: MenuItem) => {
+	// 	item.setTitle("Embed link in audio tag [LocalMedia]")
+	// 		.setIcon("link")
+	// 		.onClick(async () => {
+	// 			if (!editor) return;
+	// 			embedMedia(editor, DEFAULT_SETTINGS, "audio");
+	// 		});
+	// });
+
 	return;
 }
