@@ -10,8 +10,10 @@ import {
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
 	private server: MediaServer;
-	private startRibbon: HTMLElement;
-	private stopRibbon: HTMLElement;
+	private toggleRibbon: HTMLElement;
+	private statusElement: HTMLElement;
+	private serverStatusUpdatedInterval_ID: number | NodeJS.Timeout;
+
 	private serverRunning: boolean = false;
 
 	async onload() {
@@ -22,34 +24,24 @@ export default class MyPlugin extends Plugin {
 		// Initialize the MediaServer instance
 		this.server = new MediaServer(this.settings.port);
 		this.server.startServer();
+		this.serverRunning = true;
 
 		if (this.settings.showInRibbon) {
-			this.startRibbon = this.addRibbonIcon(
-				"play-circle",
-				"Start Media server",
+			
+			this.toggleRibbon = this.addRibbonIcon(
+				"server",
+				"Toggle Media server",
 				() => {
 					if (!this.serverRunning) {
-						this.server.startServer();
 						this.serverRunning = true;
+						this.server.startServer();
 						new Notice(
-							`Media server started on port ${this.settings.port}`
+							`Local Media server started on port ${this.settings.port}`
 						);
 					} else {
-						new Notice("Server is already running");
-					}
-				}
-			);
-
-			this.stopRibbon = this.addRibbonIcon(
-				"stop-circle",
-				"Stop Media server",
-				() => {
-					if (this.serverRunning) {
-						this.server.stopServer();
 						this.serverRunning = false;
-						new Notice("Media server stopped");
-					} else {
-						new Notice("Server is not running");
+						this.server.stopServer();
+						new Notice("Local Media server stopped");
 					}
 				}
 			);
@@ -61,7 +53,6 @@ export default class MyPlugin extends Plugin {
 			editorCallback(editor: Editor, ctx) {
 				try {
 					embedMedia(editor, this.settings, "iframe");
-					console.log("successfully embeded in iframe");
 				} catch (error) {
 					console.log("error :", error);
 				}
@@ -73,7 +64,6 @@ export default class MyPlugin extends Plugin {
 			editorCallback(editor: Editor, ctx) {
 				try {
 					embedMedia(editor, this.settings, "video");
-					console.log("successfully embeded in video");
 				} catch (error) {
 					console.log("error :", error);
 				}
@@ -85,7 +75,6 @@ export default class MyPlugin extends Plugin {
 			editorCallback(editor: Editor, ctx) {
 				try {
 					embedMedia(editor, this.settings, "audio");
-					console.log("successfully embeded in audio");
 				} catch (error) {
 					console.log("error :", error);
 				}
@@ -97,7 +86,6 @@ export default class MyPlugin extends Plugin {
 			editorCallback(editor: Editor, ctx) {
 				try {
 					embedMedia(editor, this.settings, "image");
-					console.log("successfully embeded in image");
 				} catch (error) {
 					console.log("error :", error);
 				}
@@ -109,7 +97,6 @@ export default class MyPlugin extends Plugin {
 			editorCallback(editor: Editor, ctx) {
 				try {
 					embedMedia(editor, this.settings, "auto");
-					console.log("successfully embeded in auto");
 				} catch (error) {
 					console.log("error :", error);
 				}
@@ -125,6 +112,34 @@ export default class MyPlugin extends Plugin {
 				}
 			)
 		);
+
+		this.statusElement = this.addStatusBarItem();
+		this.serverStatusUpdatedInterval_ID = setInterval(
+			() => {
+				// const serverStatus = this.serverRunning;
+				const statusText = this.serverRunning
+					? "Local Media Server Active🟢"
+					: "Local Media Server ServerInactive 🔴";
+				const statusElement = document.querySelector(
+					"#local-media-server-status"
+				);
+
+				if (this.statusElement && statusElement) {
+					statusElement.textContent = statusText;
+				} else {
+					this.statusElement.createEl("span", {
+						text: statusText,
+						attr: {
+							id: "local-media-server-status",
+							cls: "status-bar-item",
+							
+						},
+					});
+				}
+			},
+			1000
+		);
+
 	}
 
 	async loadSettings() {
@@ -141,6 +156,7 @@ export default class MyPlugin extends Plugin {
 	async unload() {
 		this.server.stopServer();
 		await this.saveSettings();
-		console.log("Server stopped");
+		clearInterval(this.serverStatusUpdatedInterval_ID);
+		
 	}
 }
