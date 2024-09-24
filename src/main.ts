@@ -30,19 +30,7 @@ export default class MyPlugin extends Plugin {
 			this.toggleRibbon = this.addRibbonIcon(
 				"server",
 				"Toggle Media server",
-				() => {
-					if (!this.serverRunning) {
-						this.serverRunning = true;
-						this.server.startServer();
-						new Notice(
-							`Local Media server started on port ${this.settings.port}`
-						);
-					} else {
-						this.serverRunning = false;
-						this.server.stopServer();
-						new Notice("Local Media server stopped");
-					}
-				}
+				this.toggleServer
 			);
 		}
 
@@ -68,10 +56,10 @@ export default class MyPlugin extends Plugin {
 			},
 		});
 		this.addCommand({
-			id: "embed-in-imagetag-LocalMedia",
-			name: "Embed in image tag",
-			editorCallback(editor: Editor, ctx) {
-				embedMedia(editor, this.settings, "image");
+			id: "toggleserver-LocalMedia",
+			name: "Toggle Local Media Server",
+			callback: () => {
+				this.toggleServer();
 			},
 		});
 		this.addCommand({
@@ -115,6 +103,19 @@ export default class MyPlugin extends Plugin {
 		}, 1000);
 	}
 
+	private toggleServer = () => {
+		if (!this.serverRunning) {
+			this.serverRunning = true;
+			this.server.startServer();
+			new Notice(
+				`Local Media server started on port ${this.settings.port}`
+			);
+		} else {
+			this.serverRunning = false;
+			this.server.stopServer();
+			new Notice("Local Media server stopped");
+		}
+	};
 	async loadSettings() {
 		this.settings = Object.assign(
 			{},
