@@ -1,14 +1,14 @@
 import { PluginSettingTab, Setting } from "obsidian";
-import MyPlugin from "main";
+import EmbedMediaPlugin from "main";
 
-export interface MyPluginSettings {
+export interface LocalMediaPluginSettings {
 	port: number;
 	baselink: string;
 	showInMenuItem: boolean;
 	showInRibbon: boolean;
 }
 
-export const DEFAULT_SETTINGS: MyPluginSettings = {
+export const DEFAULT_SETTINGS: LocalMediaPluginSettings = {
 	port: 5555,
 	baselink: "http://127.0.0.1",
 	showInMenuItem: true,
@@ -21,7 +21,7 @@ export type KeysOfType<Obj, Type> = NonNullable<
 >;
 
 export class MyPluginSettingsTab extends PluginSettingTab {
-	constructor(public plugin: MyPlugin) {
+	constructor(public plugin: EmbedMediaPlugin) {
 		//@ts-ignore
 		super(plugin.app, plugin);
 	}
@@ -30,7 +30,7 @@ export class MyPluginSettingsTab extends PluginSettingTab {
 		return new Setting(this.containerEl).setName(heading).setHeading();
 	}
 
-	addTextSetting(settingName: KeysOfType<MyPluginSettings, string>) {
+	addTextSetting(settingName: KeysOfType<LocalMediaPluginSettings, string>) {
 		return new Setting(this.containerEl).addText((text) => {
 			text.setValue(this.plugin.settings[settingName])
 				.setPlaceholder(DEFAULT_SETTINGS[settingName])
@@ -42,7 +42,9 @@ export class MyPluginSettingsTab extends PluginSettingTab {
 		});
 	}
 
-	addNumberSetting(settingName: KeysOfType<MyPluginSettings, number>) {
+	addNumberSetting(
+		settingName: KeysOfType<LocalMediaPluginSettings, number>
+	) {
 		return new Setting(this.containerEl).addText((text) => {
 			text.setValue("" + this.plugin.settings[settingName])
 				.setPlaceholder("" + DEFAULT_SETTINGS[settingName])
@@ -57,7 +59,7 @@ export class MyPluginSettingsTab extends PluginSettingTab {
 	}
 
 	addToggleSetting(
-		settingName: KeysOfType<MyPluginSettings, boolean>,
+		settingName: KeysOfType<LocalMediaPluginSettings, boolean>,
 		extraOnChange?: (value: boolean) => void
 	) {
 		return new Setting(this.containerEl).addToggle((toggle) => {
@@ -73,7 +75,7 @@ export class MyPluginSettingsTab extends PluginSettingTab {
 	}
 
 	addDropdowenSetting(
-		settingName: KeysOfType<MyPluginSettings, string>,
+		settingName: KeysOfType<LocalMediaPluginSettings, string>,
 		options: readonly string[],
 		display?: (option: string) => string,
 		extraOnChange?: (value: string) => void
@@ -99,7 +101,7 @@ export class MyPluginSettingsTab extends PluginSettingTab {
 	}
 
 	addSliderSetting(
-		settingName: KeysOfType<MyPluginSettings, number>,
+		settingName: KeysOfType<LocalMediaPluginSettings, number>,
 		min: number,
 		max: number,
 		step: number
@@ -119,10 +121,16 @@ export class MyPluginSettingsTab extends PluginSettingTab {
 
 	display(): void {
 		this.containerEl.empty();
-		this.containerEl.createEl("h2", { text: "Settings for Local-Video-Ebmed Plugin" });
+		this.containerEl.createEl("h2", {
+			text: "Settings for Local-Video-Ebmed Plugin",
+		});
 		// this.addHeading("General Settings");
-		this.addNumberSetting("port").setName("Port (for the server to run on)");
-		this.addTextSetting("baselink").setName("Base Link (used in replacement only)");
+		this.addNumberSetting("port").setName(
+			"Port (for the server to run on)"
+		);
+		this.addTextSetting("baselink").setName(
+			"Base Link (used in replacement only)"
+		);
 		this.addToggleSetting("showInMenuItem").setName("Show in Menu Item");
 		this.addToggleSetting("showInRibbon").setName("Show in Ribbon");
 	}

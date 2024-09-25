@@ -2,13 +2,13 @@ import { embedMedia, onEditorMenu } from "functions";
 import { Notice, Plugin, Editor, Menu } from "obsidian";
 import { MediaServer } from "server";
 import {
-	MyPluginSettings,
+	LocalMediaPluginSettings,
 	DEFAULT_SETTINGS,
 	MyPluginSettingsTab,
 } from "settings";
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class EmbedMediaPlugin extends Plugin {
+	settings: LocalMediaPluginSettings;
 	private server: MediaServer;
 	private toggleRibbon: HTMLElement;
 	private statusElement: HTMLElement;
