@@ -12,8 +12,6 @@ export default class EmbedMediaPlugin extends Plugin {
 	private server: MediaServer;
 	private toggleRibbon: HTMLElement;
 	private statusElement: HTMLElement;
-	private serverStatusUpdatedInterval_ID: number | NodeJS.Timeout;
-
 	private serverRunning: boolean = false;
 
 	async onload() {
@@ -82,31 +80,31 @@ export default class EmbedMediaPlugin extends Plugin {
 		);
 
 		this.statusElement = this.addStatusBarItem();
-		this.serverStatusUpdatedInterval_ID = setInterval(() => {
-			const statusText = this.serverRunning ? "🟢" : "🔴";
-			const statusElement = document.querySelector(
-				"#local-media-server-status"
-			);
 
-			if (this.statusElement && statusElement) {
-				statusElement.textContent = statusText;
-			} else {
-				this.statusElement.createEl("span", {
-					text: statusText,
-					attr: {
-						id: "local-media-server-status",
-						cls: "status-bar-item",
-					},
-				});
-			}
-		}, 1000);
-
+		this.updateStatusElement();
 		this.statusElement.addEventListener("click", () => {
 			this.toggleServer();
 		});
 	}
 
-	private toggleServer = () => {
+	private updateStatusElement = () => {
+		const statusText = this.serverRunning ? "🟢" : "🔴";
+		const statusElement = document.querySelector(
+			"#local-media-server-status"
+		);
+
+		if (this.statusElement && statusElement) {
+			statusElement.textContent = statusText;
+		} else {
+			this.statusElement.createEl("span", {
+				text: statusText,
+				attr: {
+					id: "local-media-server-status",
+				},
+			});
+		}
+	};
+	toggleServer = () => {
 		if (!this.serverRunning) {
 			try {
 				this.server.startServer();
@@ -124,6 +122,7 @@ export default class EmbedMediaPlugin extends Plugin {
 			this.server.stopServer();
 			new Notice("Local Media server stopped");
 		}
+		this.updateStatusElement();
 	};
 	async loadSettings() {
 		this.settings = Object.assign(
@@ -139,7 +138,6 @@ export default class EmbedMediaPlugin extends Plugin {
 	async unload() {
 		this.server.stopServer();
 		await this.saveSettings();
-		clearInterval(this.serverStatusUpdatedInterval_ID);
 		this.statusElement.remove();
 	}
 }
