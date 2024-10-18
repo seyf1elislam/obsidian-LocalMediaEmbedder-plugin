@@ -9,7 +9,7 @@ export function embedMedia(
 	embedType: EmbedType
 ) {
 	try {
-		const filePath = editor.getSelection();
+		let filePath = editor.getSelection();
 
 		const port: number = settings.port || DEFAULT_SETTINGS.port;
 		const baselink: string = settings.baselink || DEFAULT_SETTINGS.baselink;
@@ -19,7 +19,11 @@ export function embedMedia(
 			return;
 		}
 
-		// Check if the file path is a valid file or link (starts with C:\ or / or https://)
+		filePath = decodeURIComponent(filePath);
+		if (filePath.startsWith("file:///")) {
+			filePath = filePath.replace("file:///", "");
+		}
+		// Check if the file path is a valid file or link (starts with C:\ or / or https:// or http://)
 		const isWindowsPath = filePath.match(/^[A-Za-z]:(\\|\/)/);
 		const isUnixPath = filePath.match(/^\//);
 		const isLink = filePath.match(/^https?:\/\//);
@@ -41,11 +45,11 @@ export function embedMedia(
 		let embedCode: string;
 
 		if (embedType === "auto") {
-			if (filePath.match(/\.mp4$/)) {
+			if (filePath.match(/\.(mp4|webm|ogg)$/)) {
 				embedType = "video";
-			} else if (filePath.match(/\.mp3$/)) {
+			} else if (filePath.match(/\.(mp3|wav|ogg)$/)) {
 				embedType = "audio";
-			} else if (filePath.match(/\.png$|\.jpg$|\.jpeg$/)) {
+			} else if (filePath.match(/\.(png|jpg|jpeg|gif|bmp|webp)$/)) {
 				embedType = "image";
 			} else {
 				embedType = "iframe";
