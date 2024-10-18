@@ -81,7 +81,9 @@ export default class EmbedMediaPlugin extends Plugin {
 
 		this.statusElement = this.addStatusBarItem();
 
-		this.updateStatusElement();
+		this.updateStatusElement(); // Initialize the status element in the status bar
+		this.updateRibbonIconColor(); // set the color of the ribbon icon
+
 		this.statusElement.addEventListener("click", () => {
 			this.toggleServer();
 		});
@@ -123,6 +125,7 @@ export default class EmbedMediaPlugin extends Plugin {
 			new Notice("Local Media server stopped");
 		}
 		this.updateStatusElement();
+		this.updateRibbonIconColor();
 	};
 	async loadSettings() {
 		this.settings = Object.assign(
@@ -139,5 +142,10 @@ export default class EmbedMediaPlugin extends Plugin {
 		this.server.stopServer();
 		await this.saveSettings();
 		this.statusElement.remove();
+	}
+	updateRibbonIconColor() {
+		this.toggleRibbon.style.color = this.serverRunning
+			? "rgb(36, 233, 36)"
+			: "";
 	}
 }
