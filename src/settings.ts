@@ -5,14 +5,12 @@ export interface LocalMediaPluginSettings {
 	port: number;
 	baselink: string;
 	showInMenuItem: boolean;
-	showInRibbon: boolean;
 }
 
 export const DEFAULT_SETTINGS: LocalMediaPluginSettings = {
 	port: 5555,
 	baselink: "http://127.0.0.1",
 	showInMenuItem: true,
-	showInRibbon: false,
 };
 
 // Inspired by https://stackoverflow.com/a/50851710/13613783
@@ -121,10 +119,6 @@ export class MyPluginSettingsTab extends PluginSettingTab {
 
 	display(): void {
 		this.containerEl.empty();
-		this.containerEl.createEl("h2", {
-			text: "Settings for Local-Video-Ebmed Plugin",
-		});
-		// this.addHeading("General Settings");
 		this.addNumberSetting("port").setName(
 			"Port (for the server to run on)"
 		);
@@ -132,6 +126,5 @@ export class MyPluginSettingsTab extends PluginSettingTab {
 			"Base Link (used in replacement only)"
 		);
 		this.addToggleSetting("showInMenuItem").setName("Show in Menu Item");
-		this.addToggleSetting("showInRibbon").setName("Show in Ribbon");
 	}
 }

@@ -19,24 +19,25 @@ export default class EmbedMediaPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 		this.addSettingTab(new MyPluginSettingsTab(this));
-		// await this.saveSettings();
-
 		// Initialize the MediaServer instance
 		this.server = new MediaServer(this.settings.port);
-		this.server.startServer();
-		this.serverRunning = true;
-
-		if (this.settings.showInRibbon) {
-			this.toggleRibbon = this.addRibbonIcon(
-				"server",
-				"Toggle Media server",
-				this.toggleServer
-			);
+		try {
+			this.server.startServer();
+			this.serverRunning = true;
+		} catch (error) {
+			new Notice(`Failed to start server: ${error.message}`);
+			this.serverRunning = false;
 		}
+
+		this.toggleRibbon = this.addRibbonIcon(
+			"server-crash",
+			"Toggle media server",
+			this.toggleServer
+		);
 
 		this.addCommand({
 			id: "embed-in-iframe-0",
-			name: "Embed in Iframe tag",
+			name: "Embed in iframe tag",
 			editorCallback(editor: Editor, ctx) {
 				embedMedia(editor, this.settings, "iframe");
 			},
@@ -57,7 +58,7 @@ export default class EmbedMediaPlugin extends Plugin {
 		});
 		this.addCommand({
 			id: "toggleserver-LocalMedia",
-			name: "Toggle Local Media Server",
+			name: "Toggle local media server",
 			callback: () => {
 				this.toggleServer();
 			},
@@ -82,9 +83,7 @@ export default class EmbedMediaPlugin extends Plugin {
 
 		this.statusElement = this.addStatusBarItem();
 		this.serverStatusUpdatedInterval_ID = setInterval(() => {
-			const statusText = this.serverRunning
-				? "Local Media Server Active🟢"
-				: "Local Media Server ServerInactive 🔴";
+			const statusText = this.serverRunning ? "🟢" : "🔴";
 			const statusElement = document.querySelector(
 				"#local-media-server-status"
 			);
@@ -109,8 +108,14 @@ export default class EmbedMediaPlugin extends Plugin {
 
 	private toggleServer = () => {
 		if (!this.serverRunning) {
-			this.serverRunning = true;
-			this.server.startServer();
+			try {
+				this.server.startServer();
+				this.serverRunning = true;
+			} catch (error) {
+				new Notice(`Failed to start server: ${error.message}`);
+				this.serverRunning = false;
+			}
+
 			new Notice(
 				`Local Media server started on port ${this.settings.port}`
 			);
