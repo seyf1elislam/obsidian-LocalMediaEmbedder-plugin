@@ -1,4 +1,5 @@
-import { embedMedia, onEditorMenu } from "functions";
+import { embedMediaAsCodeBlock, onEditorMenu } from "functions";
+import { embedMediOld } from "embedMedia_old";
 import { Notice, Plugin, Editor, Menu } from "obsidian";
 import { MediaServer } from "server";
 import {
@@ -6,6 +7,7 @@ import {
 	DEFAULT_SETTINGS,
 	MyPluginSettingsTab,
 } from "settings";
+import { MediaBlockProcessor } from "media_blockproccessor";
 
 export default class EmbedMediaPlugin extends Plugin {
 	settings: LocalMediaPluginSettings;
@@ -37,21 +39,21 @@ export default class EmbedMediaPlugin extends Plugin {
 			id: "embed-in-iframe-0",
 			name: "Embed in iframe tag",
 			editorCallback(editor: Editor, ctx) {
-				embedMedia(editor, this.settings, "iframe");
+				embedMediOld(editor, this.settings, "iframe");
 			},
 		});
 		this.addCommand({
 			id: "embed-in-videotag-LocalMedia",
 			name: "Embed in video tag",
 			editorCallback(editor: Editor, ctx) {
-				embedMedia(editor, this.settings, "video");
+				embedMediOld(editor, this.settings, "video");
 			},
 		});
 		this.addCommand({
 			id: "embed-in-audiotag-LocalMedia",
 			name: "Embed in audio tag",
 			editorCallback(editor: Editor, ctx) {
-				embedMedia(editor, this.settings, "audio");
+				embedMediOld(editor, this.settings, "audio");
 			},
 		});
 		this.addCommand({
@@ -65,7 +67,16 @@ export default class EmbedMediaPlugin extends Plugin {
 			id: "embed-in-auto-localMedia",
 			name: "Embed auto",
 			editorCallback(editor: Editor, ctx) {
-				embedMedia(editor, this.settings, "auto");
+				embedMediOld(editor, this.settings, "auto");
+			},
+		});
+
+		//?====== new
+		this.addCommand({
+			id: "embed-in-codeblock-localMedia",
+			name: "Embed as code block",
+			editorCallback(editor: Editor, ctx) {
+				embedMediaAsCodeBlock(editor);
 			},
 		});
 
@@ -86,6 +97,11 @@ export default class EmbedMediaPlugin extends Plugin {
 
 		this.statusElement.addEventListener("click", () => {
 			this.toggleServer();
+		});
+
+		this.registerMarkdownCodeBlockProcessor("media", (source, el, ctx) => {
+			const obj = new MediaBlockProcessor(this.app, this.settings);
+			obj.run(source, el);
 		});
 	}
 
