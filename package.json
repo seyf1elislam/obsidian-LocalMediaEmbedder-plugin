@@ -1,6 +1,6 @@
 {
-	"name": "obsidian-",
-	"version": "0.1.0",
+	"name": "obsidian-localmediaembedder-plugin",
+	"version": "0.1.2",
 	"description": "An Obsidian.md plugin to ",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
@@ -23,6 +23,8 @@
 	},
 	"dependencies": {
 		"obsidian-": "file:",
+		"obsidian-localmediaembedder-plugin": "file:",
+		"obsidian-LocalMediaEmbedder-plugin": "file:",
 		"path": "^0.12.7"
 	}
 }
