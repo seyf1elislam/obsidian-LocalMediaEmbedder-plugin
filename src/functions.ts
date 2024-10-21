@@ -1,77 +1,34 @@
 import { Notice, Editor, Menu, MenuItem } from "obsidian";
 import { DEFAULT_SETTINGS } from "settings";
+import { MediaBlockType, MediaType } from "types";
 
-export type EmbedType = "video" | "iframe" | "audio" | "image" | "auto";
-
-export function embedMedia(
-	editor: Editor,
-	settings: typeof DEFAULT_SETTINGS = DEFAULT_SETTINGS,
-	embedType: EmbedType
-) {
+export function embedMediaAsCodeBlock(editor: Editor): void {
 	try {
-		const filePath = editor.getSelection();
-
-		const port: number = settings.port || DEFAULT_SETTINGS.port;
-		const baselink: string = settings.baselink || DEFAULT_SETTINGS.baselink;
-
+		let filePath = editor.getSelection();
 		if (!filePath) {
 			new Notice("File path not provided");
 			return;
 		}
 
-		// Check if the file path is a valid file or link (starts with C:\ or / or https://)
-		const isWindowsPath = filePath.match(/^[A-Za-z]:(\\|\/)/);
-		const isUnixPath = filePath.match(/^\//);
-		const isLink = filePath.match(/^https?:\/\//);
+		filePath = filePath.replace("file:///", "");
 
-		let url: string;
+		let embedType = determineEmbedType(filePath);
 
-		if (isLink) {
-			// If it's a link, embed it directly without adding anything
-			url = filePath;
-		} else if (isWindowsPath || isUnixPath) {
-			// If it's a file path, prepend the local server address
-			const encodedPath = encodeURIComponent(filePath);
-			url = `${baselink}:${port}/?q=${encodedPath}`;
-		} else {
-			new Notice("The provided file path or link is not valid.");
-			return;
+		let codeBlock = `\`\`\`media
+path: ${filePath}
+type: ${embedType}
+`;
+		if (embedType === "video" || embedType === "iframe") {
+			codeBlock += `width: ${640}
+height: ${360}
+`;
 		}
 
-		let embedCode: string;
+		codeBlock += `\`\`\``;
 
-		if (embedType === "auto") {
-			if (filePath.match(/\.mp4$/)) {
-				embedType = "video";
-			} else if (filePath.match(/\.mp3$/)) {
-				embedType = "audio";
-			} else if (filePath.match(/\.png$|\.jpg$|\.jpeg$/)) {
-				embedType = "image";
-			} else {
-				embedType = "iframe";
-			}
-		}
-
-		if (embedType === "video") {
-			embedCode = `<video width="640" height="360" controls>
-    <source src="${url}" type="video/mp4">
-    Your browser does not support the video tag.
-</video>`;
-		} else if (embedType === "audio") {
-			embedCode = `<audio controls>
-	<source src="${url}" type="audio/mpeg">
-	Your browser does not support the audio tag.
-</audio>`;
-		} else if (embedType === "image") {
-			// embedCode = `<img src="${url}" alt="image" width="640" height="360">`;
-			embedCode = `![](${url})`;
-		} else {
-			embedCode = `<iframe src="${url}" width="640" height="360" frameborder="0" allowfullscreen></iframe>`;
-		}
-
-		editor.replaceSelection(embedCode);
+		editor.replaceSelection(codeBlock);
 	} catch (error) {
-		console.log("Error :", error);
+		console.log("Error:", error);
 	}
 }
 
@@ -83,15 +40,91 @@ export function onEditorMenu(
 	if (!showInMenuItem) return;
 	try {
 		menu.addItem((item: MenuItem) => {
-			item.setTitle("Embed selected link  [LocalMediaEmbed]")
+			item.setTitle("Embed selected media path")
 				.setIcon("link")
 				.onClick(async () => {
 					if (!editor) return;
-					embedMedia(editor, DEFAULT_SETTINGS, "auto");
+					//TODO replace tihs default with the actual settings
+					// embedMediOld(editor, DEFAULT_SETTINGS, "auto");
+					embedMediaAsCodeBlock(editor);
 				});
 		});
 	} catch (error) {
 		console.log("Error :", error);
 	}
 	return;
+}
+export function generateMediaView(
+	mediainfo: MediaBlockType,
+	settings: typeof DEFAULT_SETTINGS = DEFAULT_SETTINGS
+): string {
+	try {
+		let filePath: string = mediainfo.path;
+
+		const port: number = settings.port || DEFAULT_SETTINGS.port;
+		const baselink: string = settings.baselink || DEFAULT_SETTINGS.baselink;
+
+		if (!filePath) {
+			new Notice("File path not provided");
+			return "";
+		}
+
+		if (filePath.startsWith("file:///"))
+			filePath = filePath.replace("file:///", "");
+		filePath = decodeURIComponent(filePath);
+
+		if (!isValidPath(filePath)) {
+			new Notice("The provided file path or link is not valid.");
+			return "";
+		}
+
+		let url: string;
+		if (filePath.match(/^https?:\/\//)) {
+			url = filePath;
+		} else {
+			const encodedPath = encodeURIComponent(filePath);
+			url = `${baselink}:${port}/?q=${encodedPath}`;
+		}
+
+		let embedType: MediaType =
+			mediainfo.type || determineEmbedType(filePath);
+
+		const width = mediainfo.width ?? 640;
+		const height = mediainfo.height ?? 360;
+
+		if (embedType === "video") {
+			return `<video width="${width}" height="${height}" controls>
+    <source src="${url}" type="video/mp4">
+    Your browser does not support the video tag.
+</video>`;
+		} else if (embedType === "audio") {
+			return `<audio controls>
+    <source src="${url}" type="audio/mpeg">
+    Your browser does not support the audio tag.
+</audio>`;
+		} else {
+			return `<iframe src="${url}" width="${width}" height="${height}" frameborder="0" allowfullscreen></iframe>`;
+		}
+	} catch (error) {
+		console.log("Error:", error);
+		return "";
+	}
+}
+
+function isValidPath(filePath: string): boolean {
+	const isWindowsPath = filePath.match(/^[A-Za-z]:(\\|\/)/) !== null;
+	const isUnixPath = filePath.match(/^\//) !== null;
+	const isLink = filePath.match(/^https?:\/\//) !== null;
+	return isWindowsPath || isUnixPath || isLink;
+}
+
+export function determineEmbedType(filePath: string): MediaType {
+	filePath = filePath.replace("file:///", "");
+	if (filePath.match(/\.(mp4|webm|ogg)$/)) {
+		return "video";
+	} else if (filePath.match(/\.(mp3|wav|ogg)$/)) {
+		return "audio";
+	} else {
+		return "iframe";
+	}
 }
