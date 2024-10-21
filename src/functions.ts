@@ -4,24 +4,18 @@ import { MediaBlockType, MediaType } from "types";
 
 export function embedMediaAsCodeBlock(editor: Editor): void {
 	try {
-		const filePath = editor.getSelection();
+		let filePath = editor.getSelection();
 		if (!filePath) {
 			new Notice("File path not provided");
 			return;
 		}
 
-		const decodedFilePath = decodeURIComponent(filePath);
-		let embedType = "auto";
-		if (decodedFilePath.match(/\.(mp4|webm|ogg)$/)) {
-			embedType = "video";
-		} else if (decodedFilePath.match(/\.(mp3|wav|ogg)$/)) {
-			embedType = "audio";
-		} else {
-			embedType = "iframe";
-		}
+		filePath = filePath.replace("file:///", "");
+
+		let embedType = determineEmbedType(filePath);
 
 		let codeBlock = `\`\`\`media
-path: ${decodedFilePath}
+path: ${filePath}
 type: ${embedType}
 `;
 		if (embedType === "video" || embedType === "iframe") {
@@ -60,7 +54,6 @@ export function onEditorMenu(
 	}
 	return;
 }
-
 export function generateMediaView(
 	mediainfo: MediaBlockType,
 	settings: typeof DEFAULT_SETTINGS = DEFAULT_SETTINGS
@@ -76,65 +69,62 @@ export function generateMediaView(
 			return "";
 		}
 
-		filePath = decodeURIComponent(filePath);
-		if (filePath.startsWith("file:///")) {
+		if (filePath.startsWith("file:///"))
 			filePath = filePath.replace("file:///", "");
-		}
-		// Check if the file path is a valid file or link (starts with C:\ or / or https:// or http://)
-		const isWindowsPath = filePath.match(/^[A-Za-z]:(\\|\/)/);
-		const isUnixPath = filePath.match(/^\//);
-		const isLink = filePath.match(/^https?:\/\//);
+		filePath = decodeURIComponent(filePath);
 
-		let url: string;
-
-		if (isLink) {
-			// If it's a link, embed it directly without adding anything
-			url = filePath;
-		} else if (isWindowsPath || isUnixPath) {
-			// If it's a file path, prepend the local server address
-			const encodedPath = encodeURIComponent(filePath);
-			url = `${baselink}:${port}/?q=${encodedPath}`;
-		} else {
+		if (!isValidPath(filePath)) {
 			new Notice("The provided file path or link is not valid.");
 			return "";
 		}
 
-		let embedCode: string;
-		let embedType: MediaType = mediainfo.type || "auto";
-
-		if (embedType === "auto") {
-			if (filePath.match(/\.(mp4|webm|ogg)$/)) {
-				embedType = "video";
-			} else if (filePath.match(/\.(mp3|wav|ogg)$/)) {
-				embedType = "audio";
-			} else {
-				embedType = "iframe";
-			}
+		let url: string;
+		if (filePath.match(/^https?:\/\//)) {
+			url = filePath;
+		} else {
+			const encodedPath = encodeURIComponent(filePath);
+			url = `${baselink}:${port}/?q=${encodedPath}`;
 		}
 
+		let embedType: MediaType =
+			mediainfo.type || determineEmbedType(filePath);
+
+		const width = mediainfo.width ?? 640;
+		const height = mediainfo.height ?? 360;
+
 		if (embedType === "video") {
-			embedCode = `<video width="${mediainfo.width ?? 640}" height=${
-				mediainfo.height ?? 360
-			}" controls>
+			return `<video width="${width}" height="${height}" controls>
     <source src="${url}" type="video/mp4">
     Your browser does not support the video tag.
 </video>`;
 		} else if (embedType === "audio") {
-			embedCode = `<audio controls>
+			return `<audio controls>
     <source src="${url}" type="audio/mpeg">
     Your browser does not support the audio tag.
 </audio>`;
 		} else {
-			embedCode = `<iframe src="${url}" width="${
-				mediainfo.width ?? 640
-			}" height=${
-				mediainfo.height ?? 360
-			}" frameborder="0" allowfullscreen></iframe>`;
+			return `<iframe src="${url}" width="${width}" height="${height}" frameborder="0" allowfullscreen></iframe>`;
 		}
-
-		return embedCode;
 	} catch (error) {
-		console.log("Error :", error);
+		console.log("Error:", error);
 		return "";
+	}
+}
+
+function isValidPath(filePath: string): boolean {
+	const isWindowsPath = filePath.match(/^[A-Za-z]:(\\|\/)/) !== null;
+	const isUnixPath = filePath.match(/^\//) !== null;
+	const isLink = filePath.match(/^https?:\/\//) !== null;
+	return isWindowsPath || isUnixPath || isLink;
+}
+
+export function determineEmbedType(filePath: string): MediaType {
+	filePath = filePath.replace("file:///", "");
+	if (filePath.match(/\.(mp4|webm|ogg)$/)) {
+		return "video";
+	} else if (filePath.match(/\.(mp3|wav|ogg)$/)) {
+		return "audio";
+	} else {
+		return "iframe";
 	}
 }
