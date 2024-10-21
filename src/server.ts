@@ -60,7 +60,7 @@ export class MediaServer {
 		});
 
 		this.server.listen(this.port, "0.0.0.0", () => {
-			console.log(`Video server running on port ${this.port}`);
+			// console.log(`Video server running on port ${this.port}`);
 		});
 	}
 
