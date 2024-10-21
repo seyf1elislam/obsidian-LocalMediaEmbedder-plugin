@@ -11,30 +11,32 @@ The Local Media Embedder plugin for Obsidian allows you to easily embed local me
 
 ## Installation
 
-1. Download the plugin from the [GitHub repository](#).
-2. Extract the contents of the zip file to your Obsidian plugins directory: `E:/..../yourVault/.obsidian/plugins/`.
+The  plugin is not yet available in the Obsidian Community Plugins gallery. You can install the plugin manually by following these steps:
+### manual installation
+
+1. Download the plugin from github released.
+2. Extract the contents of the zip file to your Obsidian plugins  directory: `E:/..../yourVault/.obsidian/plugins/`.
 3. Enable the plugin in Obsidian by navigating to `Settings` > `Community plugins` > `Installed plugins` and toggling the Local Media Embedder plugin.
 
-## Usage
+### Using BRAT :
 
-1. Open a note in Obsidian.
-2. Use the plugin's toolbar button or command palette to embed a local media file.
-3. Select the media file from your local filesystem.
-4. The media file will be embedded into your note at the cursor position.
-
-## screenshots
-> using command palette
-
-![](image.gif)
-
-> using editor menu 
-
-![](image2.gif)
+Add the current  to BRAT Plugin it will automatically download and install the plugin for you 
 
 
-## Contributing
+## Usage :
 
-Contributions are welcome! If you have any suggestions, bug reports, or feature requests, please open an issue or submit a pull request on the [GitHub repository](#).
+Now you can use code block to embed media files instead of using tags
+```markdown
+ ```media
+path: F:\Tutorial Videos\AI\deep learning\01.But what is a neural network- - Chapter 1, Deep learning.mp4
+type: video
+width: 640
+height: 360
+
+```
+![](v2image.gif)
+
+
 
 
 ## Acknowledgements
