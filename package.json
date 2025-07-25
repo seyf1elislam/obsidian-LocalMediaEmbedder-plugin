@@ -1,7 +1,7 @@
 {
 	"name": "obsidian-localmediaembedder-plugin",
 	"version": "0.1.2",
-	"description": "An Obsidian.md plugin to ",
+	"description": "An Obsidian.md plugin to embed local media files (videos, images, audio) in your notes through a local server",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
@@ -22,9 +22,6 @@
 		"typescript": "4.7.4"
 	},
 	"dependencies": {
-		"obsidian-": "file:",
-		"obsidian-localmediaembedder-plugin": "file:",
-		"obsidian-LocalMediaEmbedder-plugin": "file:",
 		"path": "^0.12.7"
 	}
 }

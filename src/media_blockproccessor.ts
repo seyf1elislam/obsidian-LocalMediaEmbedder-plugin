@@ -1,4 +1,4 @@
-import { App, Editor, View, parseYaml } from "obsidian";
+import { App, parseYaml } from "obsidian";
 import { MediaType, MediaBlockType } from "types";
 import { LocalMediaPluginSettings } from "settings";
 import { generateMediaView } from "functions";
@@ -12,11 +12,9 @@ export class MediaBlockProcessor {
 		this.settings = settings;
 	}
 
-	
 	async run(source: string, el: HTMLElement) {
 		try {
 			const data: MediaBlockType = this.parseMediaInfo(source);
-			const type = data.type ? (data.type as MediaType) : "auto";
 			el.innerHTML = generateMediaView(data, this.settings);
 		} catch (error) {
 			el.createEl("p", { text: `Error parsing YAML: ${error.message}` });

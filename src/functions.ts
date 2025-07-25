@@ -6,13 +6,13 @@ export function embedMediaAsCodeBlock(editor: Editor): void {
 	try {
 		let filePath = editor.getSelection();
 		if (!filePath) {
-			new Notice("File path not provided");
+			new Notice("Please select a file path first, or use the file picker command.");
 			return;
 		}
 
 		filePath = filePath.replace("file:///", "");
 
-		let embedType = determineEmbedType(filePath);
+		const embedType = determineEmbedType(filePath);
 
 		let codeBlock = `\`\`\`media
 path: ${filePath}
@@ -27,8 +27,52 @@ height: ${360}
 		codeBlock += `\`\`\``;
 
 		editor.replaceSelection(codeBlock);
+		new Notice(`Embedded ${embedType} media successfully`);
 	} catch (error) {
-		console.log("Error:", error);
+		console.error("Error embedding media:", error);
+		new Notice(`Error embedding media: ${error.message}`);
+	}
+}
+
+export function embedMediaWithFilePicker(editor: Editor): void {
+	try {
+		// Create a file input element
+		const fileInput = document.createElement('input');
+		fileInput.type = 'file';
+		fileInput.accept = 'video/*,audio/*,image/*,.mp4,.webm,.ogg,.ogv,.avi,.mov,.mp3,.wav,.m4a,.flac,.png,.gif,.jpg,.jpeg,.webp,.svg';
+		
+		fileInput.onchange = (event: Event) => {
+			const target = event.target as HTMLInputElement;
+			const file = target.files?.[0];
+			
+			if (file) {
+				// Note: In browser environments, we can't get the full file path for security reasons
+				// Users will need to manually edit the path in the code block
+				const fileName = file.name;
+				const embedType = determineEmbedType(fileName);
+				
+				let codeBlock = `\`\`\`media
+path: ${fileName}
+type: ${embedType}
+`;
+				if (embedType === "video" || embedType === "iframe") {
+					codeBlock += `width: ${640}
+height: ${360}
+`;
+				}
+
+				codeBlock += `\`\`\``;
+
+				editor.replaceSelection(codeBlock);
+				new Notice(`Embedded ${embedType} media template. Please edit the path to the full file path.`);
+			}
+		};
+		
+		// Trigger the file picker
+		fileInput.click();
+	} catch (error) {
+		console.error("Error with file picker:", error);
+		new Notice(`Error opening file picker: ${error.message}`);
 	}
 }
 
@@ -65,8 +109,7 @@ export function generateMediaView(
 		const baselink: string = settings.baselink || DEFAULT_SETTINGS.baselink;
 
 		if (!filePath) {
-			new Notice("File path not provided");
-			return "";
+			return '<p style="color: red;">Error: File path not provided</p>';
 		}
 
 		if (filePath.startsWith("file:///"))
@@ -74,8 +117,7 @@ export function generateMediaView(
 		filePath = decodeURIComponent(filePath);
 
 		if (!isValidPath(filePath)) {
-			new Notice("The provided file path or link is not valid.");
-			return "";
+			return '<p style="color: red;">Error: The provided file path or link is not valid or not a supported media format.</p>';
 		}
 
 		let url: string;
@@ -86,45 +128,94 @@ export function generateMediaView(
 			url = `${baselink}:${port}/?q=${encodedPath}`;
 		}
 
-		let embedType: MediaType =
+		const embedType: MediaType =
 			mediainfo.type || determineEmbedType(filePath);
 
-		const width = mediainfo.width ?? 640;
-		const height = mediainfo.height ?? 360;
+		const width = mediainfo.width ?? settings.defaultWidth ?? DEFAULT_SETTINGS.defaultWidth;
+		const height = mediainfo.height ?? settings.defaultHeight ?? DEFAULT_SETTINGS.defaultHeight;
 
-		if (embedType === "video") {
-			return `<video width="${width}" height="${height}" controls>
+		// Generate appropriate HTML based on media type
+		switch (embedType) {
+			case "video":
+				return `<video width="${width}" height="${height}" controls preload="metadata">
     <source src="${url}" type="video/mp4">
     Your browser does not support the video tag.
 </video>`;
-		} else if (embedType === "audio") {
-			return `<audio controls>
+			
+			case "audio":
+				return `<audio controls preload="metadata" style="width: 100%; max-width: ${width}px;">
     <source src="${url}" type="audio/mpeg">
     Your browser does not support the audio tag.
 </audio>`;
-		} else {
-			return `<iframe src="${url}" width="${width}" height="${height}" frameborder="0" allowfullscreen></iframe>`;
+			
+			case "image":
+				return `<img src="${url}" alt="Local media" style="max-width: ${width}px; max-height: ${height}px;" loading="lazy">`;
+			
+			case "iframe":
+			default:
+				return `<iframe src="${url}" width="${width}" height="${height}" frameborder="0" allowfullscreen loading="lazy"></iframe>`;
 		}
 	} catch (error) {
-		console.log("Error:", error);
-		return "";
+		console.error("Error generating media view:", error);
+		return `<p style="color: red;">Error: Failed to generate media view - ${error.message}</p>`;
 	}
 }
 
 function isValidPath(filePath: string): boolean {
+	// Check for valid URL
+	if (filePath.match(/^https?:\/\//)) {
+		try {
+			new URL(filePath);
+			return true;
+		} catch {
+			return false;
+		}
+	}
+
+	// Check for valid local file paths
 	const isWindowsPath = filePath.match(/^[A-Za-z]:(\\|\/)/) !== null;
 	const isUnixPath = filePath.match(/^\//) !== null;
-	const isLink = filePath.match(/^https?:\/\//) !== null;
-	return isWindowsPath || isUnixPath || isLink;
+	
+	// Additional security checks
+	if (isWindowsPath || isUnixPath) {
+		// Prevent directory traversal attempts
+		if (filePath.includes('..') || filePath.includes('~')) {
+			return false;
+		}
+		// Check for valid file extension
+		const ext = filePath.split('.').pop()?.toLowerCase();
+		const validExtensions = [
+			'png', 'gif', 'jpg', 'jpeg', 'webp', 'svg',
+			'mp4', 'webm', 'ogg', 'ogv', 'avi', 'mov',
+			'mp3', 'wav', 'oga', 'weba', 'm4a', 'flac'
+		];
+		return ext ? validExtensions.includes(ext) : false;
+	}
+	
+	return false;
 }
 
 export function determineEmbedType(filePath: string): MediaType {
 	filePath = filePath.replace("file:///", "");
-	if (filePath.match(/\.(mp4|webm|ogg)$/)) {
+	const ext = filePath.split('.').pop()?.toLowerCase();
+	
+	if (!ext) return "iframe";
+	
+	// Video formats
+	if (['mp4', 'webm', 'ogg', 'ogv', 'avi', 'mov'].includes(ext)) {
 		return "video";
-	} else if (filePath.match(/\.(mp3|wav|ogg)$/)) {
-		return "audio";
-	} else {
-		return "iframe";
 	}
+	
+	// Audio formats  
+	if (['mp3', 'wav', 'oga', 'weba', 'm4a', 'flac'].includes(ext)) {
+		return "audio";
+	}
+	
+	// Image formats
+	if (['png', 'gif', 'jpg', 'jpeg', 'webp', 'svg'].includes(ext)) {
+		return "image";
+	}
+	
+	// Default to iframe for unknown formats
+	return "iframe";
 }

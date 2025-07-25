@@ -5,12 +5,18 @@ export interface LocalMediaPluginSettings {
 	port: number;
 	baselink: string;
 	showInMenuItem: boolean;
+	defaultWidth: number;
+	defaultHeight: number;
+	enableCaching: boolean;
 }
 
 export const DEFAULT_SETTINGS: LocalMediaPluginSettings = {
 	port: 5555,
 	baselink: "http://127.0.0.1",
 	showInMenuItem: true,
+	defaultWidth: 640,
+	defaultHeight: 360,
+	enableCaching: true,
 };
 
 // Inspired by https://stackoverflow.com/a/50851710/13613783
@@ -119,12 +125,37 @@ export class MyPluginSettingsTab extends PluginSettingTab {
 
 	display(): void {
 		this.containerEl.empty();
-		this.addNumberSetting("port").setName(
-			"Port (for the server to run on)"
-		);
-		this.addTextSetting("baselink").setName(
-			"Base Link (used in replacement only)"
-		);
-		this.addToggleSetting("showInMenuItem").setName("Show in Menu Item");
+		
+		this.addHeading("Server Configuration");
+		
+		this.addNumberSetting("port")
+			.setName("Server Port")
+			.setDesc("Port number for the local media server (1024-65535). Restart required after changing.");
+		
+		this.addTextSetting("baselink")
+			.setName("Base URL")
+			.setDesc("Base URL for the local server. Usually should remain as localhost/127.0.0.1 for security.");
+
+		this.addHeading("User Interface");
+		
+		this.addToggleSetting("showInMenuItem")
+			.setName("Show in Context Menu")
+			.setDesc("Show 'Embed selected media path' option in the editor context menu when text is selected.");
+
+		this.addHeading("Default Media Settings");
+		
+		this.addNumberSetting("defaultWidth")
+			.setName("Default Width")
+			.setDesc("Default width in pixels for embedded media when not specified in the code block.");
+		
+		this.addNumberSetting("defaultHeight")
+			.setName("Default Height")  
+			.setDesc("Default height in pixels for embedded media when not specified in the code block.");
+
+		this.addHeading("Performance");
+		
+		this.addToggleSetting("enableCaching")
+			.setName("Enable Caching")
+			.setDesc("Enable HTTP caching headers for better performance. Media files will be cached for 1 hour.");
 	}
 }

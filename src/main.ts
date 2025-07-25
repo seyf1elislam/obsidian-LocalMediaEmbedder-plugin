@@ -1,4 +1,4 @@
-import { embedMediaAsCodeBlock, onEditorMenu } from "functions";
+import { embedMediaAsCodeBlock, embedMediaWithFilePicker, onEditorMenu } from "functions";
 import { embedMediOld } from "embedMedia_old";
 import { Notice, Plugin, Editor, Menu } from "obsidian";
 import { MediaServer } from "server";
@@ -20,11 +20,12 @@ export default class EmbedMediaPlugin extends Plugin {
 		await this.loadSettings();
 		this.addSettingTab(new MyPluginSettingsTab(this));
 		// Initialize the MediaServer instance
-		this.server = new MediaServer(this.settings.port);
+		this.server = new MediaServer(this.settings.port, this.settings);
 		try {
 			this.server.startServer();
 			this.serverRunning = true;
 		} catch (error) {
+			console.error("Failed to start media server:", error);
 			new Notice(`Failed to start server: ${error.message}`);
 			this.serverRunning = false;
 		}
@@ -71,12 +72,20 @@ export default class EmbedMediaPlugin extends Plugin {
 			},
 		});
 
-		//?====== new
+		//?====== new code block embedding
 		this.addCommand({
 			id: "embed-in-codeblock-localMedia",
-			name: "Embed as code block",
+			name: "Embed as code block (from selection)",
 			editorCallback(editor: Editor, ctx) {
 				embedMediaAsCodeBlock(editor);
+			},
+		});
+
+		this.addCommand({
+			id: "embed-with-filepicker-localMedia",
+			name: "Embed with file picker",
+			editorCallback(editor: Editor, ctx) {
+				embedMediaWithFilePicker(editor);
 			},
 		});
 
@@ -125,16 +134,18 @@ export default class EmbedMediaPlugin extends Plugin {
 	toggleServer = () => {
 		if (!this.serverRunning) {
 			try {
+				// Recreate server with current settings
+				this.server = new MediaServer(this.settings.port, this.settings);
 				this.server.startServer();
 				this.serverRunning = true;
+				new Notice(
+					`Local Media server started on port ${this.settings.port}`
+				);
 			} catch (error) {
+				console.error("Failed to start media server:", error);
 				new Notice(`Failed to start server: ${error.message}`);
 				this.serverRunning = false;
 			}
-
-			new Notice(
-				`Local Media server started on port ${this.settings.port}`
-			);
 		} else {
 			this.serverRunning = false;
 			this.server.stopServer();
@@ -155,9 +166,13 @@ export default class EmbedMediaPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 	async unload() {
-		this.server.stopServer();
-		await this.saveSettings();
-		this.statusElement.remove();
+		try {
+			this.server?.stopServer();
+			await this.saveSettings();
+			this.statusElement?.remove();
+		} catch (error) {
+			console.error("Error during plugin unload:", error);
+		}
 	}
 	updateRibbonIconColor() {
 		this.toggleRibbon.style.color = this.serverRunning

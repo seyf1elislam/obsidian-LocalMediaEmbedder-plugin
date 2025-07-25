@@ -1,4 +1,4 @@
-export type MediaType = "video" | "iframe" | "audio" | "auto";
+export type MediaType = "video" | "iframe" | "audio" | "image" | "auto";
 
 export type MediaBlockType = {
 	path: string;
