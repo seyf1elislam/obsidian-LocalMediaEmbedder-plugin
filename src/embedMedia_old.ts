@@ -16,8 +16,7 @@ export function embedMediOld(
 			filePath = input.getSelection();
 		}
 
-		const port: number = settings.port || DEFAULT_SETTINGS.port;
-		const baselink: string = settings.baselink || DEFAULT_SETTINGS.baselink;
+
 
 		if (!filePath) {
 			new Notice("File path not provided");
@@ -31,17 +30,19 @@ export function embedMediOld(
 		// Check if the file path is a valid file or link (starts with C:\ or / or https:// or http://)
 		const isWindowsPath = filePath.match(/^[A-Za-z]:(\\|\/)/);
 		const isUnixPath = filePath.match(/^\//);
+	
+	
 		const isLink = filePath.match(/^https?:\/\//);
-
 		let url: string;
 
 		if (isLink) {
 			// If it's a link, embed it directly without adding anything
 			url = filePath;
 		} else if (isWindowsPath || isUnixPath) {
-			// If it's a file path, prepend the local server address
-			const encodedPath = encodeURIComponent(filePath);
-			url = `${baselink}:${port}/?q=${encodedPath}`;
+			// If it's a file path, convert to app:// protocol
+            const normalizedPath = filePath.replace(/\\/g, "/");
+            const encodedPath = normalizedPath.split('/').map(part => encodeURIComponent(part)).join('/');
+			url = `app://local/${encodedPath}`;
 		} else {
 			new Notice("The provided file path or link is not valid.");
 			return;

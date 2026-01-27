@@ -61,9 +61,6 @@ export function generateMediaView(
 	try {
 		let filePath: string = mediainfo.path;
 
-		const port: number = settings.port || DEFAULT_SETTINGS.port;
-		const baselink: string = settings.baselink || DEFAULT_SETTINGS.baselink;
-
 		if (!filePath) {
 			new Notice("File path not provided");
 			return "";
@@ -82,8 +79,17 @@ export function generateMediaView(
 		if (filePath.match(/^https?:\/\//)) {
 			url = filePath;
 		} else {
-			const encodedPath = encodeURIComponent(filePath);
-			url = `${baselink}:${port}/?q=${encodedPath}`;
+            // Convert to app:// URL for local files
+            // Normalize path separators to forward slashes
+            const normalizedPath = filePath.replace(/\\/g, "/");
+            
+            // Encode the path to handle spaces and special characters, but preserve the structure
+            // We encode the whole path chunks safely if needed, but usually fixed replacement is enough for app protocol
+             const encodedPath = normalizedPath.split('/').map(part => encodeURIComponent(part)).join('/');
+
+            // Construct the final app:// URL
+            // On Windows, it might look like app://local/D:/...
+            url = `app://local/${encodedPath}`;
 		}
 
 		let embedType: MediaType =

@@ -1,7 +1,6 @@
 import { embedMediaAsCodeBlock, onEditorMenu } from "functions";
 import { embedMediOld } from "embedMedia_old";
-import { Notice, Plugin, Editor, Menu } from "obsidian";
-import { MediaServer } from "server";
+import { Plugin, Editor, Menu } from "obsidian";
 import {
 	LocalMediaPluginSettings,
 	DEFAULT_SETTINGS,
@@ -11,29 +10,10 @@ import { MediaBlockProcessor } from "media_blockproccessor";
 
 export default class EmbedMediaPlugin extends Plugin {
 	settings: LocalMediaPluginSettings;
-	private server: MediaServer;
-	private toggleRibbon: HTMLElement;
-	private statusElement: HTMLElement;
-	private serverRunning: boolean = false;
 
 	async onload() {
 		await this.loadSettings();
 		this.addSettingTab(new MyPluginSettingsTab(this));
-		// Initialize the MediaServer instance
-		this.server = new MediaServer(this.settings.port);
-		try {
-			this.server.startServer();
-			this.serverRunning = true;
-		} catch (error) {
-			new Notice(`Failed to start server: ${error.message}`);
-			this.serverRunning = false;
-		}
-
-		this.toggleRibbon = this.addRibbonIcon(
-			"server-crash",
-			"Toggle media server",
-			this.toggleServer
-		);
 
 		this.addCommand({
 			id: "embed-in-iframe-0",
@@ -56,13 +36,7 @@ export default class EmbedMediaPlugin extends Plugin {
 				embedMediOld(editor, this.settings, "audio");
 			},
 		});
-		this.addCommand({
-			id: "toggleserver-LocalMedia",
-			name: "Toggle local media server",
-			callback: () => {
-				this.toggleServer();
-			},
-		});
+
 		this.addCommand({
 			id: "embed-in-auto-localMedia",
 			name: "Embed auto",
@@ -90,59 +64,12 @@ export default class EmbedMediaPlugin extends Plugin {
 			)
 		);
 
-		this.statusElement = this.addStatusBarItem();
-
-		this.updateStatusElement(); // Initialize the status element in the status bar
-		this.updateRibbonIconColor(); // set the color of the ribbon icon
-
-		this.statusElement.addEventListener("click", () => {
-			this.toggleServer();
-		});
-
 		this.registerMarkdownCodeBlockProcessor("media", (source, el, ctx) => {
 			const obj = new MediaBlockProcessor(this.app, this.settings);
 			obj.run(source, el);
 		});
 	}
 
-	private updateStatusElement = () => {
-		const statusText = this.serverRunning ? "🟢" : "🔴";
-		const statusElement = document.querySelector(
-			"#local-media-server-status"
-		);
-
-		if (this.statusElement && statusElement) {
-			statusElement.textContent = statusText;
-		} else {
-			this.statusElement.createEl("span", {
-				text: statusText,
-				attr: {
-					id: "local-media-server-status",
-				},
-			});
-		}
-	};
-	toggleServer = () => {
-		if (!this.serverRunning) {
-			try {
-				this.server.startServer();
-				this.serverRunning = true;
-			} catch (error) {
-				new Notice(`Failed to start server: ${error.message}`);
-				this.serverRunning = false;
-			}
-
-			new Notice(
-				`Local Media server started on port ${this.settings.port}`
-			);
-		} else {
-			this.serverRunning = false;
-			this.server.stopServer();
-			new Notice("Local Media server stopped");
-		}
-		this.updateStatusElement();
-		this.updateRibbonIconColor();
-	};
 	async loadSettings() {
 		this.settings = Object.assign(
 			{},
@@ -155,13 +82,6 @@ export default class EmbedMediaPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 	async unload() {
-		this.server.stopServer();
 		await this.saveSettings();
-		this.statusElement.remove();
-	}
-	updateRibbonIconColor() {
-		this.toggleRibbon.style.color = this.serverRunning
-			? "rgb(36, 233, 36)"
-			: "";
 	}
 }

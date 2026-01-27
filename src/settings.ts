@@ -2,14 +2,10 @@ import { PluginSettingTab, Setting } from "obsidian";
 import EmbedMediaPlugin from "main";
 
 export interface LocalMediaPluginSettings {
-	port: number;
-	baselink: string;
 	showInMenuItem: boolean;
 }
 
 export const DEFAULT_SETTINGS: LocalMediaPluginSettings = {
-	port: 5555,
-	baselink: "http://127.0.0.1",
 	showInMenuItem: true,
 };
 
@@ -119,12 +115,6 @@ export class MyPluginSettingsTab extends PluginSettingTab {
 
 	display(): void {
 		this.containerEl.empty();
-		this.addNumberSetting("port").setName(
-			"Port (for the server to run on)"
-		);
-		this.addTextSetting("baselink").setName(
-			"Base Link (used in replacement only)"
-		);
 		this.addToggleSetting("showInMenuItem").setName("Show in Menu Item");
 	}
 }
