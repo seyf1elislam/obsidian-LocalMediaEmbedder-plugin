@@ -12,6 +12,7 @@ export default class EmbedMediaPlugin extends Plugin {
 	settings: LocalMediaPluginSettings;
 
 	async onload() {
+
 		await this.loadSettings();
 		this.addSettingTab(new MyPluginSettingsTab(this));
 
@@ -19,21 +20,21 @@ export default class EmbedMediaPlugin extends Plugin {
 			id: "embed-in-iframe-0",
 			name: "Embed in iframe tag",
 			editorCallback(editor: Editor, ctx) {
-				embedMediOld(editor, this.settings, "iframe");
+				embedMediOld(this.app, editor, this.settings, "iframe");
 			},
 		});
 		this.addCommand({
 			id: "embed-in-videotag-LocalMedia",
 			name: "Embed in video tag",
 			editorCallback(editor: Editor, ctx) {
-				embedMediOld(editor, this.settings, "video");
+				embedMediOld(this.app, editor, this.settings, "video");
 			},
 		});
 		this.addCommand({
 			id: "embed-in-audiotag-LocalMedia",
 			name: "Embed in audio tag",
 			editorCallback(editor: Editor, ctx) {
-				embedMediOld(editor, this.settings, "audio");
+				embedMediOld(this.app, editor, this.settings, "audio");
 			},
 		});
 
@@ -41,7 +42,7 @@ export default class EmbedMediaPlugin extends Plugin {
 			id: "embed-in-auto-localMedia",
 			name: "Embed auto",
 			editorCallback(editor: Editor, ctx) {
-				embedMediOld(editor, this.settings, "auto");
+				embedMediOld(this.app, editor, this.settings, "auto");
 			},
 		});
 

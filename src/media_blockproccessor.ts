@@ -17,7 +17,7 @@ export class MediaBlockProcessor {
 		try {
 			const data: MediaBlockType = this.parseMediaInfo(source);
 			const type = data.type ? (data.type as MediaType) : "auto";
-			el.innerHTML = generateMediaView(data, this.settings);
+			el.innerHTML = generateMediaView(this.app, data, this.settings);
 		} catch (error) {
 			el.createEl("p", { text: `Error parsing YAML: ${error.message}` });
 		}

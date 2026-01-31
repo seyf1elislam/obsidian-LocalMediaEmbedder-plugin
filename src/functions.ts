@@ -1,4 +1,4 @@
-import { Notice, Editor, Menu, MenuItem } from "obsidian";
+import { Notice, Editor, Menu, MenuItem, App } from "obsidian";
 import { DEFAULT_SETTINGS } from "settings";
 import { MediaBlockType, MediaType } from "types";
 
@@ -55,6 +55,7 @@ export function onEditorMenu(
 	return;
 }
 export function generateMediaView(
+	app: App,
 	mediainfo: MediaBlockType,
 	settings: typeof DEFAULT_SETTINGS = DEFAULT_SETTINGS
 ): string {
@@ -88,8 +89,10 @@ export function generateMediaView(
              const encodedPath = normalizedPath.split('/').map(part => encodeURIComponent(part)).join('/');
 
             // Construct the final app:// URL
-            // On Windows, it might look like app://local/D:/...
-            url = `app://local/${encodedPath}`;
+            const resourcePath = app.vault.adapter.getResourcePath("__dummy__");
+            const appIdMatches = resourcePath.match(/app:\/\/([^\/]+)\//);
+            const appId = appIdMatches ? appIdMatches[1] : "local";
+            url = `app://${appId}/${encodedPath}`;
 		}
 
 		let embedType: MediaType =

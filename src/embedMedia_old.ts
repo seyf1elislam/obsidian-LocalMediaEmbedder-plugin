@@ -1,8 +1,9 @@
-import { Editor, Notice } from "obsidian";
+import { Editor, Notice, App } from "obsidian";
 import { DEFAULT_SETTINGS } from "settings";
 import { MediaType } from "types";
 //deprecated function to embed media
 export function embedMediOld(
+	app: App,
 	input: Editor | string,
 	settings: typeof DEFAULT_SETTINGS = DEFAULT_SETTINGS,
 	embedType: MediaType
@@ -42,7 +43,10 @@ export function embedMediOld(
 			// If it's a file path, convert to app:// protocol
             const normalizedPath = filePath.replace(/\\/g, "/");
             const encodedPath = normalizedPath.split('/').map(part => encodeURIComponent(part)).join('/');
-			url = `app://local/${encodedPath}`;
+			const resourcePath = app.vault.adapter.getResourcePath("__dummy__");
+			const appIdMatches = resourcePath.match(/app:\/\/([^\/]+)\//);
+			const appId = appIdMatches ? appIdMatches[1] : "local";
+			url = `app://${appId}/${encodedPath}`;
 		} else {
 			new Notice("The provided file path or link is not valid.");
 			return;
