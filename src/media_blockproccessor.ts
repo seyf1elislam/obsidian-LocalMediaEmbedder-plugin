@@ -46,13 +46,21 @@ export class MediaBlockProcessor {
 
 	private parseMediaInfo(source: string): MediaBlockType {
 		const parsed = parseYaml(source);
+		let path = parsed.path || parsed.inputpath;
 
-		if (!parsed.path || parsed.path.length < 3) {
+		if (path && typeof path === 'string') {
+			path = path.trim();
+			if ((path.startsWith('"') && path.endsWith('"')) || (path.startsWith("'") && path.endsWith("'"))) {
+				path = path.substring(1, path.length - 1).trim();
+			}
+		}
+
+		if (!path || path.length < 3) {
 			throw new Error("Invalid path provided.");
 		}
 
 		return {
-			path: parsed.path,
+			path: path,
 			type: parsed.type as MediaType,
 			width: parsed.width,
 			height: parsed.height,

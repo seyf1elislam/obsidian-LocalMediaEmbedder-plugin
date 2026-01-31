@@ -10,6 +10,11 @@ export function embedMediaAsCodeBlock(editor: Editor): void {
 			return;
 		}
 
+		filePath = filePath.trim();
+		if ((filePath.startsWith('"') && filePath.endsWith('"')) || (filePath.startsWith("'") && filePath.endsWith("'"))) {
+			filePath = filePath.substring(1, filePath.length - 1).trim();
+		}
+
 		filePath = filePath.replace("file:///", "");
 
 		let embedType = determineEmbedType(filePath);
@@ -140,6 +145,13 @@ export function generateMediaView(
 ): string {
 	try {
 		let filePath: string = mediainfo.path;
+
+		if (filePath) {
+			filePath = filePath.trim();
+			if ((filePath.startsWith('"') && filePath.endsWith('"')) || (filePath.startsWith("'") && filePath.endsWith("'"))) {
+				filePath = filePath.substring(1, filePath.length - 1).trim();
+			}
+		}
 
 		if (!filePath) {
 			new Notice("File path not provided");
