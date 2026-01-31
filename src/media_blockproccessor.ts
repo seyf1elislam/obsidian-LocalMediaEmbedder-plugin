@@ -24,9 +24,20 @@ export class MediaBlockProcessor {
             // Initialize Plyr for the newly added elements
             const players = el.querySelectorAll('.plyr-player');
             players.forEach(playerEl => {
-                new Plyr(playerEl as HTMLElement, {
+                const player = new Plyr(playerEl as HTMLElement, {
                     // Optional: add config here
                 });
+                (playerEl as any).plyr = player;
+                
+                // Also attach to the container so we can find it easily
+                if (player.elements.container) {
+                    (player.elements.container as any).plyr = player;
+                    // Copy mediaId to container if possible
+                    const mediaId = playerEl.getAttribute("data-media-id");
+                    if (mediaId) {
+                        player.elements.container.setAttribute("data-media-id", mediaId);
+                    }
+                }
             });
 		} catch (error) {
 			el.createEl("p", { text: `Error parsing YAML: ${error.message}` });

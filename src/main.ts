@@ -47,7 +47,16 @@ export default class EmbedMediaPlugin extends Plugin {
             players.forEach(playerEl => {
                 // To avoid double initialization if MediaBlockProcessor already did it
                 if (!(playerEl as any).plyr) {
-                    new Plyr(playerEl as HTMLElement);
+                    const player = new Plyr(playerEl as HTMLElement);
+                    (playerEl as any).plyr = player;
+
+                    if (player.elements.container) {
+                        (player.elements.container as any).plyr = player;
+                        const mediaId = playerEl.getAttribute("data-media-id");
+                        if (mediaId) {
+                            player.elements.container.setAttribute("data-media-id", mediaId);
+                        }
+                    }
                 }
             });
         });
@@ -64,28 +73,40 @@ export default class EmbedMediaPlugin extends Plugin {
                     const activeLeaf = this.app.workspace.activeLeaf;
                     if (activeLeaf) {
                         const viewContent = activeLeaf.view.containerEl;
-                        const players = viewContent.querySelectorAll('.plyr-player');
+                        const playerElements = viewContent.querySelectorAll('.plyr-player, .plyr');
                         let targetPlayer: any = null;
                         
                         // If we have a mediaId, find the exact player
-                        if (mediaId) {
-                            players.forEach((p: any) => {
-                                 const pId = p.plyr?.media?.getAttribute("data-media-id");
-                                 if (pId === mediaId) {
-                                     targetPlayer = p.plyr;
+                        if (mediaId && mediaId !== "") {
+                            playerElements.forEach((el: any) => {
+                                 if (el.plyr) {
+                                     // Check for ID on original el, container, and media
+                                     const checks = [el, el.plyr.elements?.original, el.plyr.elements?.container, el.plyr.media];
+                                     for (const check of checks) {
+                                         if (check && check.getAttribute && check.getAttribute("data-media-id") === mediaId) {
+                                             targetPlayer = el.plyr;
+                                             break;
+                                         }
+                                     }
                                  }
                             });
                         }
                         
                         // Fallback to active/first player if no specific ID or not found
                         if (!targetPlayer) {
-                            players.forEach((p: any) => {
-                                 if (p.plyr && p.plyr.playing) {
-                                    targetPlayer = p.plyr;
+                            playerElements.forEach((el: any) => {
+                                 if (el.plyr && el.plyr.playing) {
+                                    targetPlayer = el.plyr;
                                  }
                             });
-                            if (!targetPlayer && players.length > 0) {
-                                targetPlayer = (players[0] as any).plyr;
+                            if (!targetPlayer) {
+                                // Find any first valid plyr
+                                for (let i = 0; i < playerElements.length; i++) {
+                                    if ((playerElements[i] as any).plyr) {
+                                        targetPlayer = (playerElements[i] as any).plyr;
+                                        break;
+                                    }
+                                }
                             }
                         }
 

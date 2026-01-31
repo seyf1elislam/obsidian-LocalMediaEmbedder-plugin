@@ -36,27 +36,68 @@ export function insertVideoTimestamp(app: App, editor: Editor): void {
     const activeLeaf = app.workspace.activeLeaf;
     if (activeLeaf) {
         const viewContent = activeLeaf.view.containerEl;
-        const players = viewContent.querySelectorAll('.plyr-player');
-        let targetPlayer: any = null;
-
-        players.forEach((p: any) => {
-            if (p.plyr && p.plyr.playing) {
-                targetPlayer = p.plyr;
+        // Broaden search to include both the original element and the Plyr container
+        const playerElements = viewContent.querySelectorAll('.plyr-player, .plyr');
+        
+        let foundPlayers: any[] = [];
+        playerElements.forEach((el: any) => {
+            if (el.plyr && !foundPlayers.includes(el.plyr)) {
+                foundPlayers.push(el.plyr);
             }
         });
 
-        if (!targetPlayer && players.length > 0) {
-            targetPlayer = (players[0] as any).plyr;
+        let targetPlayer: any = null;
+
+        // Choice 1: The one that is currently playing
+        foundPlayers.forEach((p: any) => {
+            if (p.playing) {
+                targetPlayer = p;
+            }
+        });
+
+        // Choice 2: If only one player total, use it
+        if (!targetPlayer && foundPlayers.length === 1) {
+            targetPlayer = foundPlayers[0];
+        }
+
+        // Choice 3: If multiple players and none playing, we might not know which one.
+        // For now, take the first one found, but notify user if it's ambiguous.
+        if (!targetPlayer && foundPlayers.length > 1) {
+            targetPlayer = foundPlayers[0];
+            new Notice("Multiple players found. Using the first one.");
         }
 
         if (targetPlayer) {
             const time = targetPlayer.currentTime;
             const formatted = formatTime(time);
-            const mediaId = targetPlayer.media?.getAttribute("data-media-id") || "";
+            
+            // Try to get mediaId from original, container, or media element
+            let mediaId = "";
+            
+            const checks = [
+                targetPlayer.elements?.original,
+                targetPlayer.elements?.container,
+                targetPlayer.media
+            ];
+
+            for (const el of checks) {
+                if (el) {
+                    const id = el.getAttribute("data-media-id");
+                    if (id) {
+                        mediaId = id;
+                        break;
+                    }
+                }
+            }
+            
+            // Fallback: If no mediaId found but it's a youtube player, we can hash the source URL if available
+            if (!mediaId && targetPlayer.provider === 'youtube' && targetPlayer.source) {
+                mediaId = stringToHash(targetPlayer.source);
+            }
 
             editor.replaceSelection(`<span class="timestamp-seek" data-media-id="${mediaId}" data-seconds="${time.toFixed(0)}">${formatted}</span> `);
         } else {
-            new Notice("No active video player found.");
+            new Notice("No active video player found in this note.");
         }
     }
 }
@@ -148,7 +189,9 @@ export function generateMediaView(
 			return `<audio data-media-id="${mediaId}" class="plyr-player" controls>
     <source src="${url}" type="audio/mpeg">
 </audio>`;
-		} else {
+		} else if (embedType === "youtube") {
+            return `<div data-media-id="${mediaId}" class="plyr-player plyr__video-embed" data-plyr-provider="youtube" data-plyr-embed-id="${url}"></div>`;
+        } else {
 			return `<iframe data-media-id="${mediaId}" class="plyr-player" src="${url}" width="${width}" height="${height}" frameborder="0" allowfullscreen></iframe>`;
 		}
 	} catch (error) {
@@ -176,6 +219,11 @@ function isValidPath(filePath: string): boolean {
 
 export function determineEmbedType(filePath: string): MediaType {
 	filePath = filePath.replace("file:///", "");
+    
+    if (filePath.includes("youtube.com") || filePath.includes("youtu.be")) {
+        return "youtube";
+    }
+
 	if (filePath.match(/\.(mp4|webm|ogg)$/)) {
 		return "video";
 	} else if (filePath.match(/\.(mp3|wav|ogg)$/)) {
