@@ -100,22 +100,33 @@ export function generateMediaView(
 
 		const width = mediainfo.width ?? 640;
 		const height = mediainfo.height ?? 360;
+        const mediaId = stringToHash(filePath);
 
 		if (embedType === "video") {
-			return `<video class="plyr-player" playsinline controls width="${width}" height="${height}">
+			return `<video data-media-id="${mediaId}" class="plyr-player" playsinline controls width="${width}" height="${height}">
     <source src="${url}" type="video/mp4">
 </video>`;
 		} else if (embedType === "audio") {
-			return `<audio class="plyr-player" controls>
+			return `<audio data-media-id="${mediaId}" class="plyr-player" controls>
     <source src="${url}" type="audio/mpeg">
 </audio>`;
 		} else {
-			return `<iframe class="plyr-player" src="${url}" width="${width}" height="${height}" frameborder="0" allowfullscreen></iframe>`;
+			return `<iframe data-media-id="${mediaId}" class="plyr-player" src="${url}" width="${width}" height="${height}" frameborder="0" allowfullscreen></iframe>`;
 		}
 	} catch (error) {
 		console.log("Error:", error);
 		return "";
 	}
+}
+
+export function stringToHash(str: string): string {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(36);
 }
 
 function isValidPath(filePath: string): boolean {

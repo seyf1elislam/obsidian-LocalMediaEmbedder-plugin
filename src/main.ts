@@ -88,28 +88,36 @@ export default class EmbedMediaPlugin extends Plugin {
             const target = evt.target as HTMLElement;
             if (target && target.classList.contains("timestamp-seek")) {
                 const dataTime = target.getAttribute("data-seconds");
+                const mediaId = target.getAttribute("data-media-id");
+                
                 if (dataTime) {
                     const seconds = parseFloat(dataTime);
-                    
-                    // Find the player 
-                    // Strategy: Look for the active player in the current view
-                    // Try to find a player in the active leaf's view
                     const activeLeaf = this.app.workspace.activeLeaf;
                     if (activeLeaf) {
                         const viewContent = activeLeaf.view.containerEl;
                         const players = viewContent.querySelectorAll('.plyr-player');
-                        
-                        // Heuristic: Use the first playing player, or the first player if none playing
                         let targetPlayer: any = null;
                         
-                        players.forEach((p: any) => {
-                             if (p.plyr && p.plyr.playing) {
-                                targetPlayer = p.plyr;
-                             }
-                        });
+                        // If we have a mediaId, find the exact player
+                        if (mediaId) {
+                            players.forEach((p: any) => {
+                                 const pId = p.plyr?.media?.getAttribute("data-media-id");
+                                 if (pId === mediaId) {
+                                     targetPlayer = p.plyr;
+                                 }
+                            });
+                        }
                         
-                        if (!targetPlayer && players.length > 0) {
-                            targetPlayer = (players[0] as any).plyr;
+                        // Fallback to active/first player if no specific ID or not found
+                        if (!targetPlayer) {
+                            players.forEach((p: any) => {
+                                 if (p.plyr && p.plyr.playing) {
+                                    targetPlayer = p.plyr;
+                                 }
+                            });
+                            if (!targetPlayer && players.length > 0) {
+                                targetPlayer = (players[0] as any).plyr;
+                            }
                         }
 
                         if (targetPlayer) {
@@ -128,13 +136,9 @@ export default class EmbedMediaPlugin extends Plugin {
                 const activeLeaf = this.app.workspace.activeLeaf;
                 if (activeLeaf) {
                      const viewContent = activeLeaf.view.containerEl;
-                     // Look for plyr in the PREVIEW mode or EDIT mode container
-                     // Note: IF we are in Source Mode, the player might not be rendered unless in Live Preview
-                     
                      const players = viewContent.querySelectorAll('.plyr-player');
                      let targetPlayer: any = null;
                         
-                     // Same heuristic
                      players.forEach((p: any) => {
                           if (p.plyr && p.plyr.playing) {
                              targetPlayer = p.plyr;
@@ -145,12 +149,13 @@ export default class EmbedMediaPlugin extends Plugin {
                          targetPlayer = (players[0] as any).plyr;
                      }
                      
-                     
                      if (targetPlayer) {
                          const time = targetPlayer.currentTime;
                          const formatted = formatTime(time);
-                         // Insert HTML span: <span class="timestamp-seek" data-seconds="123">MM:SS</span>
-                         editor.replaceSelection(`<span class="timestamp-seek" data-seconds="${time.toFixed(0)}">${formatted}</span> `);
+                         const mediaId = targetPlayer.media?.getAttribute("data-media-id") || "";
+                         
+                         // Insert HTML span with media-id: <span class="timestamp-seek" data-media-id="..." data-seconds="123">MM:SS</span>
+                         editor.replaceSelection(`<span class="timestamp-seek" data-media-id="${mediaId}" data-seconds="${time.toFixed(0)}">${formatted}</span> `);
                      } else {
                          new Notice("No active video player found.");
                      }
