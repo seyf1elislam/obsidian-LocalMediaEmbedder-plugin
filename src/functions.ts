@@ -32,7 +32,37 @@ height: ${360}
 	}
 }
 
+export function insertVideoTimestamp(app: App, editor: Editor): void {
+    const activeLeaf = app.workspace.activeLeaf;
+    if (activeLeaf) {
+        const viewContent = activeLeaf.view.containerEl;
+        const players = viewContent.querySelectorAll('.plyr-player');
+        let targetPlayer: any = null;
+
+        players.forEach((p: any) => {
+            if (p.plyr && p.plyr.playing) {
+                targetPlayer = p.plyr;
+            }
+        });
+
+        if (!targetPlayer && players.length > 0) {
+            targetPlayer = (players[0] as any).plyr;
+        }
+
+        if (targetPlayer) {
+            const time = targetPlayer.currentTime;
+            const formatted = formatTime(time);
+            const mediaId = targetPlayer.media?.getAttribute("data-media-id") || "";
+
+            editor.replaceSelection(`<span class="timestamp-seek" data-media-id="${mediaId}" data-seconds="${time.toFixed(0)}">${formatted}</span> `);
+        } else {
+            new Notice("No active video player found.");
+        }
+    }
+}
+
 export function onEditorMenu(
+    app: App,
 	menu: Menu,
 	editor: Editor,
 	showInMenuItem: boolean = true
@@ -49,6 +79,14 @@ export function onEditorMenu(
 					embedMediaAsCodeBlock(editor);
 				});
 		});
+
+        menu.addItem((item: MenuItem) => {
+            item.setTitle("Insert video timestamp")
+                .setIcon("timer")
+                .onClick(() => {
+                    insertVideoTimestamp(app, editor);
+                });
+        });
 	} catch (error) {
 		console.log("Error :", error);
 	}

@@ -1,4 +1,4 @@
-import { embedMediaAsCodeBlock, onEditorMenu, formatTime, parseTime } from "functions";
+import { embedMediaAsCodeBlock, onEditorMenu, formatTime, parseTime, insertVideoTimestamp } from "functions";
 import { embedMediOld } from "embedMedia_old";
 import { Plugin, Editor, Menu, Notice } from "obsidian";
 import {
@@ -63,7 +63,7 @@ export default class EmbedMediaPlugin extends Plugin {
 			this.app.workspace.on(
 				"editor-menu",
 				(menu: Menu, editor: Editor) => {
-					onEditorMenu(menu, editor, this.settings.showInMenuItem);
+					onEditorMenu(this.app, menu, editor);
 				}
 			)
 		);
@@ -133,33 +133,7 @@ export default class EmbedMediaPlugin extends Plugin {
             id: "insert-video-timestamp",
             name: "Insert video timestamp",
             editorCallback: (editor: Editor, view: any) => {
-                const activeLeaf = this.app.workspace.activeLeaf;
-                if (activeLeaf) {
-                     const viewContent = activeLeaf.view.containerEl;
-                     const players = viewContent.querySelectorAll('.plyr-player');
-                     let targetPlayer: any = null;
-                        
-                     players.forEach((p: any) => {
-                          if (p.plyr && p.plyr.playing) {
-                             targetPlayer = p.plyr;
-                          }
-                     });
-                     
-                     if (!targetPlayer && players.length > 0) {
-                         targetPlayer = (players[0] as any).plyr;
-                     }
-                     
-                     if (targetPlayer) {
-                         const time = targetPlayer.currentTime;
-                         const formatted = formatTime(time);
-                         const mediaId = targetPlayer.media?.getAttribute("data-media-id") || "";
-                         
-                         // Insert HTML span with media-id: <span class="timestamp-seek" data-media-id="..." data-seconds="123">MM:SS</span>
-                         editor.replaceSelection(`<span class="timestamp-seek" data-media-id="${mediaId}" data-seconds="${time.toFixed(0)}">${formatted}</span> `);
-                     } else {
-                         new Notice("No active video player found.");
-                     }
-                }
+                insertVideoTimestamp(this.app, editor);
             }
         });
 
