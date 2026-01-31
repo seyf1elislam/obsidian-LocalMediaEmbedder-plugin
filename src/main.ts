@@ -8,6 +8,9 @@ import {
 } from "settings";
 import { MediaBlockProcessor } from "media_blockproccessor";
 
+// @ts-ignore
+import Plyr from 'plyr';
+
 export default class EmbedMediaPlugin extends Plugin {
 	settings: LocalMediaPluginSettings;
 
@@ -69,6 +72,16 @@ export default class EmbedMediaPlugin extends Plugin {
 			const obj = new MediaBlockProcessor(this.app, this.settings);
 			obj.run(source, el);
 		});
+
+        this.registerMarkdownPostProcessor((el, ctx) => {
+            const players = el.querySelectorAll('.plyr-player');
+            players.forEach(playerEl => {
+                // To avoid double initialization if MediaBlockProcessor already did it
+                if (!(playerEl as any).plyr) {
+                    new Plyr(playerEl as HTMLElement);
+                }
+            });
+        });
 	}
 
 	async loadSettings() {

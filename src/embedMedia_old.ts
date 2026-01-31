@@ -65,17 +65,17 @@ export function embedMediOld(
 		}
 
 		if (embedType === "video") {
-			embedCode = `<video width="640" height="360" controls>
+			embedCode = `<video class="plyr-player" playsinline width="640" height="360" controls>
     <source src="${url}" type="video/mp4">
     Your browser does not support the video tag.
 </video>`;
 		} else if (embedType === "audio") {
-			embedCode = `<audio controls>
+			embedCode = `<audio class="plyr-player" controls>
     <source src="${url}" type="audio/mpeg">
     Your browser does not support the audio tag.
 </audio>`;
 		} else {
-			embedCode = `<iframe src="${url}" width="640" height="360" frameborder="0" allowfullscreen></iframe>`;
+			embedCode = `<iframe class="plyr-player" src="${url}" width="640" height="360" frameborder="0" allowfullscreen></iframe>`;
 		}
 
 		if (typeof input === "string") {

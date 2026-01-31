@@ -102,17 +102,15 @@ export function generateMediaView(
 		const height = mediainfo.height ?? 360;
 
 		if (embedType === "video") {
-			return `<video width="${width}" height="${height}" controls>
+			return `<video class="plyr-player" playsinline controls width="${width}" height="${height}">
     <source src="${url}" type="video/mp4">
-    Your browser does not support the video tag.
 </video>`;
 		} else if (embedType === "audio") {
-			return `<audio controls>
+			return `<audio class="plyr-player" controls>
     <source src="${url}" type="audio/mpeg">
-    Your browser does not support the audio tag.
 </audio>`;
 		} else {
-			return `<iframe src="${url}" width="${width}" height="${height}" frameborder="0" allowfullscreen></iframe>`;
+			return `<iframe class="plyr-player" src="${url}" width="${width}" height="${height}" frameborder="0" allowfullscreen></iframe>`;
 		}
 	} catch (error) {
 		console.log("Error:", error);

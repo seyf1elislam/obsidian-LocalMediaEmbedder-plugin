@@ -2,6 +2,8 @@ import { App, Editor, View, parseYaml } from "obsidian";
 import { MediaType, MediaBlockType } from "types";
 import { LocalMediaPluginSettings } from "settings";
 import { generateMediaView } from "functions";
+// @ts-ignore
+import Plyr from 'plyr';
 
 export class MediaBlockProcessor {
 	app: App;
@@ -18,6 +20,14 @@ export class MediaBlockProcessor {
 			const data: MediaBlockType = this.parseMediaInfo(source);
 			const type = data.type ? (data.type as MediaType) : "auto";
 			el.innerHTML = generateMediaView(this.app, data, this.settings);
+            
+            // Initialize Plyr for the newly added elements
+            const players = el.querySelectorAll('.plyr-player');
+            players.forEach(playerEl => {
+                new Plyr(playerEl as HTMLElement, {
+                    // Optional: add config here
+                });
+            });
 		} catch (error) {
 			el.createEl("p", { text: `Error parsing YAML: ${error.message}` });
 		}
