@@ -1,6 +1,6 @@
-import { embedMediaAsCodeBlock, onEditorMenu } from "functions";
+import { embedMediaAsCodeBlock, onEditorMenu, formatTime, parseTime } from "functions";
 import { embedMediOld } from "embedMedia_old";
-import { Plugin, Editor, Menu } from "obsidian";
+import { Plugin, Editor, Menu, Notice } from "obsidian";
 import {
 	LocalMediaPluginSettings,
 	DEFAULT_SETTINGS,
@@ -82,6 +82,82 @@ export default class EmbedMediaPlugin extends Plugin {
                 }
             });
         });
+
+        // Register the click event for timestamp links
+        this.registerDomEvent(document, "click", (evt: MouseEvent) => {
+            const target = evt.target as HTMLElement;
+            if (target && target.classList.contains("timestamp-seek")) {
+                const dataTime = target.getAttribute("data-seconds");
+                if (dataTime) {
+                    const seconds = parseFloat(dataTime);
+                    
+                    // Find the player 
+                    // Strategy: Look for the active player in the current view
+                    // Try to find a player in the active leaf's view
+                    const activeLeaf = this.app.workspace.activeLeaf;
+                    if (activeLeaf) {
+                        const viewContent = activeLeaf.view.containerEl;
+                        const players = viewContent.querySelectorAll('.plyr-player');
+                        
+                        // Heuristic: Use the first playing player, or the first player if none playing
+                        let targetPlayer: any = null;
+                        
+                        players.forEach((p: any) => {
+                             if (p.plyr && p.plyr.playing) {
+                                targetPlayer = p.plyr;
+                             }
+                        });
+                        
+                        if (!targetPlayer && players.length > 0) {
+                            targetPlayer = (players[0] as any).plyr;
+                        }
+
+                        if (targetPlayer) {
+                            targetPlayer.currentTime = seconds;
+                            targetPlayer.play();
+                        }
+                    }
+                }
+            }
+        });
+
+        this.addCommand({
+            id: "insert-video-timestamp",
+            name: "Insert video timestamp",
+            editorCallback: (editor: Editor, view: any) => {
+                const activeLeaf = this.app.workspace.activeLeaf;
+                if (activeLeaf) {
+                     const viewContent = activeLeaf.view.containerEl;
+                     // Look for plyr in the PREVIEW mode or EDIT mode container
+                     // Note: IF we are in Source Mode, the player might not be rendered unless in Live Preview
+                     
+                     const players = viewContent.querySelectorAll('.plyr-player');
+                     let targetPlayer: any = null;
+                        
+                     // Same heuristic
+                     players.forEach((p: any) => {
+                          if (p.plyr && p.plyr.playing) {
+                             targetPlayer = p.plyr;
+                          }
+                     });
+                     
+                     if (!targetPlayer && players.length > 0) {
+                         targetPlayer = (players[0] as any).plyr;
+                     }
+                     
+                     
+                     if (targetPlayer) {
+                         const time = targetPlayer.currentTime;
+                         const formatted = formatTime(time);
+                         // Insert HTML span: <span class="timestamp-seek" data-seconds="123">MM:SS</span>
+                         editor.replaceSelection(`<span class="timestamp-seek" data-seconds="${time.toFixed(0)}">${formatted}</span> `);
+                     } else {
+                         new Notice("No active video player found.");
+                     }
+                }
+            }
+        });
+
 	}
 
 	async loadSettings() {

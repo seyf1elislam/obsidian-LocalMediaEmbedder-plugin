@@ -135,3 +135,33 @@ export function determineEmbedType(filePath: string): MediaType {
 		return "iframe";
 	}
 }
+
+export function formatTime(seconds: number): string {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+
+    const mStr = m.toString().padStart(2, '0');
+    const sStr = s.toString().padStart(2, '0');
+
+    if (h > 0) {
+        return `${h}:${mStr}:${sStr}`;
+    }
+    return `${mStr}:${sStr}`;
+}
+
+export function parseTime(timeStr: string): number {
+    const parts = timeStr.split(':').map(Number);
+    let seconds = 0;
+    if (parts.length === 3) {
+        seconds += parts[0] * 3600;
+        seconds += parts[1] * 60;
+        seconds += parts[2];
+    } else if (parts.length === 2) {
+        seconds += parts[0] * 60;
+        seconds += parts[1];
+    } else if (parts.length === 1) {
+        seconds += parts[0];
+    }
+    return seconds;
+}
