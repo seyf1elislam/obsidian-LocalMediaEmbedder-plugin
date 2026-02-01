@@ -67,7 +67,7 @@ export function resolvePaths(mediainfo: MediaBlockType, settings: LocalMediaPlug
         if (filterPattern) {
             try {
                 regex = new RegExp(filterPattern, "i");
-            } catch (e) {
+            } catch {
                 new Notice("Invalid regex filter: " + filterPattern);
             }
         }
@@ -77,7 +77,7 @@ export function resolvePaths(mediainfo: MediaBlockType, settings: LocalMediaPlug
                 const fullPath = path.join(baseDir, file);
                 try {
                     if (fs.statSync(fullPath).isDirectory()) return false;
-                } catch (e) { return false; }
+                } catch { return false; }
 
                 // If it was a wildcard, we MUST match the pattern
                 if (fileGlob && regex) {

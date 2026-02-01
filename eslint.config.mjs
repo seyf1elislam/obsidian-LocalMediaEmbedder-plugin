@@ -28,6 +28,7 @@ export default tseslint.config(
       "@typescript-eslint/no-empty-function": "off",
       "@typescript-eslint/no-this-alias": "off",
       "@typescript-eslint/no-inferrable-types": ["error", { "ignoreParameters": true, "ignoreProperties": true }],
+      "@typescript-eslint/no-explicit-any": "warn",
       // Recommended rules from obsidianmd
       ...obsidianmd.configs.recommended.rules,
     }
