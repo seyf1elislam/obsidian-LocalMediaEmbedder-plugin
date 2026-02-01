@@ -1,0 +1,80 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please provide as much detail as possible about the media you are trying to embed.
+
+  - type: input
+    id: version
+    attributes:
+      label: Plugin Version
+      description: What version of the plugin are you using? (Check in Obsidian Community Plugins settings)
+      placeholder: e.g. 0.1.3
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Info
+      description: |
+        Please specify your OS and Obsidian version.
+      placeholder: |
+        - OS: [e.g. Windows 11, macOS, Android]
+        - Obsidian Version: [e.g. 1.7.7]
+    validations:
+      required: true
+
+  - type: textarea
+    id: media-info
+    attributes:
+      label: Media Details
+      description: What kind of media are you trying to embed? This helps us narrow down playback issues.
+      placeholder: |
+        - Media Type: [Local Video / YouTube / Local Audio]
+        - File Format: [e.g. .mp4, .mkv, .mp3]
+        - Path/URL used: 
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the bug and how to reproduce it.
+      placeholder: |
+        What went wrong:
+        - ...
+
+        Steps to reproduce (if known):
+        1. ...
+        2. ...
+
+        What I expected:
+        - ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console Logs (optional)
+      description: |
+        If you see any errors, paste them here.
+        Open console: **Ctrl+Shift+I** (Windows/Linux) or **Cmd+Option+I** (Mac) → Console tab
+      placeholder: Paste console logs here...
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots (optional)
+      description: Add screenshots if helpful for UI issues.
+    validations:
+      required: false
