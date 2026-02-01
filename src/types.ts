@@ -1,9 +1,11 @@
-export type MediaType = "video" | "iframe" | "audio" | "auto";
+export type MediaType = "video" | "iframe" | "audio" | "auto" | "youtube";
 
 export type MediaBlockType = {
 	path: string;
 	type?: MediaType;
-	width?: number;
-	height?: number;
+	width?: number | string;
+	height?: number | string;
 	aspectRatio?: number;
+	filter?: string;
+	view?: "list" | "grid";
 };

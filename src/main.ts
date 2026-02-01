@@ -1,75 +1,21 @@
-import { embedMediaAsCodeBlock, onEditorMenu } from "functions";
-import { embedMediOld } from "embedMedia_old";
-import { Notice, Plugin, Editor, Menu } from "obsidian";
-import { MediaServer } from "server";
+import { embedMediaAsCodeBlock, onEditorMenu, insertVideoTimestamp } from "ui_generators";
+import { Plugin, Editor, Menu, Notice } from "obsidian";
 import {
 	LocalMediaPluginSettings,
 	DEFAULT_SETTINGS,
 	MyPluginSettingsTab,
 } from "settings";
 import { MediaBlockProcessor } from "media_blockproccessor";
+import { findActivePlayer, findPlayerById } from "player_manager";
+import Plyr from "plyr";
 
 export default class EmbedMediaPlugin extends Plugin {
 	settings: LocalMediaPluginSettings;
-	private server: MediaServer;
-	private toggleRibbon: HTMLElement;
-	private statusElement: HTMLElement;
-	private serverRunning: boolean = false;
 
 	async onload() {
+
 		await this.loadSettings();
 		this.addSettingTab(new MyPluginSettingsTab(this));
-		// Initialize the MediaServer instance
-		this.server = new MediaServer(this.settings.port);
-		try {
-			this.server.startServer();
-			this.serverRunning = true;
-		} catch (error) {
-			new Notice(`Failed to start server: ${error.message}`);
-			this.serverRunning = false;
-		}
-
-		this.toggleRibbon = this.addRibbonIcon(
-			"server-crash",
-			"Toggle media server",
-			this.toggleServer
-		);
-
-		this.addCommand({
-			id: "embed-in-iframe-0",
-			name: "Embed in iframe tag",
-			editorCallback(editor: Editor, ctx) {
-				embedMediOld(editor, this.settings, "iframe");
-			},
-		});
-		this.addCommand({
-			id: "embed-in-videotag-LocalMedia",
-			name: "Embed in video tag",
-			editorCallback(editor: Editor, ctx) {
-				embedMediOld(editor, this.settings, "video");
-			},
-		});
-		this.addCommand({
-			id: "embed-in-audiotag-LocalMedia",
-			name: "Embed in audio tag",
-			editorCallback(editor: Editor, ctx) {
-				embedMediOld(editor, this.settings, "audio");
-			},
-		});
-		this.addCommand({
-			id: "toggleserver-LocalMedia",
-			name: "Toggle local media server",
-			callback: () => {
-				this.toggleServer();
-			},
-		});
-		this.addCommand({
-			id: "embed-in-auto-localMedia",
-			name: "Embed auto",
-			editorCallback(editor: Editor, ctx) {
-				embedMediOld(editor, this.settings, "auto");
-			},
-		});
 
 		//?====== new
 		this.addCommand({
@@ -85,64 +31,79 @@ export default class EmbedMediaPlugin extends Plugin {
 			this.app.workspace.on(
 				"editor-menu",
 				(menu: Menu, editor: Editor) => {
-					onEditorMenu(menu, editor, this.settings.showInMenuItem);
+					onEditorMenu(this.app, menu, editor);
 				}
 			)
 		);
-
-		this.statusElement = this.addStatusBarItem();
-
-		this.updateStatusElement(); // Initialize the status element in the status bar
-		this.updateRibbonIconColor(); // set the color of the ribbon icon
-
-		this.statusElement.addEventListener("click", () => {
-			this.toggleServer();
-		});
 
 		this.registerMarkdownCodeBlockProcessor("media", (source, el, ctx) => {
 			const obj = new MediaBlockProcessor(this.app, this.settings);
 			obj.run(source, el);
 		});
+
+        this.registerMarkdownPostProcessor((el, ctx) => {
+            const players = el.querySelectorAll('.plyr-player');
+            players.forEach(playerEl => {
+                // To avoid double initialization if MediaBlockProcessor already did it
+                if (!(playerEl as any).plyr) {
+                    const player = new Plyr(playerEl as HTMLElement);
+                    (playerEl as any).plyr = player;
+
+                    if (player.elements.container) {
+                        (player.elements.container as any).plyr = player;
+                        const mediaId = playerEl.getAttribute("data-media-id");
+                        if (mediaId) {
+                            player.elements.container.setAttribute("data-media-id", mediaId);
+                        }
+                    }
+                }
+            });
+        });
+
+        // Register the click event for timestamp links
+        this.registerDomEvent(document, "click", (evt: MouseEvent) => {
+            const target = evt.target as HTMLElement;
+            if (target && target.classList.contains("timestamp-seek")) {
+                const dataTime = target.getAttribute("data-seconds");
+                const mediaId = target.getAttribute("data-media-id");
+                
+                if (dataTime) {
+                    const seconds = parseFloat(dataTime);
+                    const activeLeaf = this.app.workspace.activeLeaf;
+                    if (activeLeaf) {
+                        const viewContent = activeLeaf.view.containerEl;
+                        
+                        let targetPlayer: Plyr | null = null;
+                        
+                        // If we have a mediaId, find the exact player
+                        if (mediaId) {
+                            targetPlayer = findPlayerById(viewContent, mediaId);
+                        }
+                        
+                        // Fallback to active/first player if no specific ID or not found
+                        if (!targetPlayer) {
+                            targetPlayer = findActivePlayer(viewContent);
+                        }
+
+                        if (targetPlayer) {
+                            targetPlayer.currentTime = seconds;
+                            targetPlayer.play();
+                        }
+                    }
+                }
+            }
+        });
+
+        this.addCommand({
+            id: "insert-video-timestamp",
+            name: "Insert video timestamp",
+            editorCallback: (editor: Editor, view: any) => {
+                insertVideoTimestamp(this.app, editor);
+            }
+        });
+
 	}
 
-	private updateStatusElement = () => {
-		const statusText = this.serverRunning ? "🟢" : "🔴";
-		const statusElement = document.querySelector(
-			"#local-media-server-status"
-		);
-
-		if (this.statusElement && statusElement) {
-			statusElement.textContent = statusText;
-		} else {
-			this.statusElement.createEl("span", {
-				text: statusText,
-				attr: {
-					id: "local-media-server-status",
-				},
-			});
-		}
-	};
-	toggleServer = () => {
-		if (!this.serverRunning) {
-			try {
-				this.server.startServer();
-				this.serverRunning = true;
-			} catch (error) {
-				new Notice(`Failed to start server: ${error.message}`);
-				this.serverRunning = false;
-			}
-
-			new Notice(
-				`Local Media server started on port ${this.settings.port}`
-			);
-		} else {
-			this.serverRunning = false;
-			this.server.stopServer();
-			new Notice("Local Media server stopped");
-		}
-		this.updateStatusElement();
-		this.updateRibbonIconColor();
-	};
 	async loadSettings() {
 		this.settings = Object.assign(
 			{},
@@ -155,13 +116,6 @@ export default class EmbedMediaPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 	async unload() {
-		this.server.stopServer();
 		await this.saveSettings();
-		this.statusElement.remove();
-	}
-	updateRibbonIconColor() {
-		this.toggleRibbon.style.color = this.serverRunning
-			? "rgb(36, 233, 36)"
-			: "";
 	}
 }
