@@ -1,4 +1,4 @@
-import { App, Editor, View, parseYaml } from "obsidian";
+import { App, parseYaml } from "obsidian";
 import { MediaType, MediaBlockType } from "types";
 import { LocalMediaPluginSettings } from "settings";
 import { generateMediaView } from "ui_generators";
@@ -60,7 +60,7 @@ export class MediaBlockProcessor {
 
 	private parseMediaInfo(source: string): MediaBlockType {
 		const parsed = parseYaml(source);
-		let path = cleanPath(parsed.path || parsed.inputpath);
+		const path = cleanPath(parsed.path || parsed.inputpath);
 
 		if (!path || path.length < 3) {
 			throw new Error("Invalid path provided.");

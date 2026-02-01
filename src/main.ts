@@ -1,5 +1,5 @@
 import { embedMediaAsCodeBlock, onEditorMenu, insertVideoTimestamp } from "ui_generators";
-import { Plugin, Editor, Menu, Notice } from "obsidian";
+import { Plugin, Editor, Menu } from "obsidian";
 import {
 	LocalMediaPluginSettings,
 	DEFAULT_SETTINGS,

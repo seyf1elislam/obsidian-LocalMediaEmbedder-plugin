@@ -1,4 +1,4 @@
-import { App, Notice } from "obsidian";
+import { Notice } from "obsidian";
 import Plyr from "plyr";
 import { stringToHash } from "./utils";
 

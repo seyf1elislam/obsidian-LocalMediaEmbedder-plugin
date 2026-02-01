@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { Notice, App } from "obsidian";
+import { Notice } from "obsidian";
 import { MediaBlockType, MediaType } from "./types";
 import { LocalMediaPluginSettings } from "./settings";
 import { cleanPath } from "./utils";

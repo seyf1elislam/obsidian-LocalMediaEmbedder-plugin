@@ -1,6 +1,6 @@
 import { App, Editor, Notice, Menu, MenuItem } from "obsidian";
 import { MediaBlockType, MediaType } from "./types";
-import { DEFAULT_SETTINGS, LocalMediaPluginSettings } from "./settings";
+import { DEFAULT_SETTINGS } from "./settings";
 import { cleanPath, stringToHash, formatTime } from "./utils";
 import { determineEmbedType, isValidPath } from "./media_utils";
 import { findActivePlayer } from "./player_manager";
@@ -16,7 +16,7 @@ export function embedMediaAsCodeBlock(editor: Editor): void {
 		filePath = cleanPath(filePath);
 		filePath = filePath.replace("file:///", "");
 
-		let embedType = determineEmbedType(filePath);
+		const embedType = determineEmbedType(filePath);
 
 		let codeBlock = `\`\`\`media
 path: ${filePath}
@@ -114,12 +114,12 @@ export function generateMediaView(
             
             // Use dummy file to get adapter resource path logic
             const resourcePath = app.vault.adapter.getResourcePath("__dummy__");
-            const appIdMatches = resourcePath.match(/app:\/\/([^\/]+)\//);
+            const appIdMatches = resourcePath.match(/app:\/\/([^/]+)\//);
             const appId = appIdMatches ? appIdMatches[1] : "local";
             url = `app://${appId}/${encodedPath}`;
 		}
 
-		let embedType: MediaType = mediainfo.type || determineEmbedType(filePath);
+		const embedType: MediaType = mediainfo.type || determineEmbedType(filePath);
 
 		const width = mediainfo.width ?? 640;
 		const height = mediainfo.height ?? 360;
