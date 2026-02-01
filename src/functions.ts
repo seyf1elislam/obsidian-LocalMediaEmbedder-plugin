@@ -2,6 +2,20 @@ import { Notice, Editor, Menu, MenuItem, App } from "obsidian";
 import { DEFAULT_SETTINGS } from "settings";
 import { MediaBlockType, MediaType } from "types";
 
+export function cleanPath(path: string): string {
+	if (!path || typeof path !== 'string') return path;
+	
+	let cleaned = path.trim();
+	// Remove surrounding quotes
+	if ((cleaned.startsWith('"') && cleaned.endsWith('"')) || (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+		cleaned = cleaned.substring(1, cleaned.length - 1).trim();
+	}
+	// Remove any actual newline characters and carriage returns
+	cleaned = cleaned.replace(/[\n\r]+/g, '').trim();
+	return cleaned;
+}
+
+
 export function embedMediaAsCodeBlock(editor: Editor): void {
 	try {
 		let filePath = editor.getSelection();
@@ -10,11 +24,7 @@ export function embedMediaAsCodeBlock(editor: Editor): void {
 			return;
 		}
 
-		filePath = filePath.trim();
-		if ((filePath.startsWith('"') && filePath.endsWith('"')) || (filePath.startsWith("'") && filePath.endsWith("'"))) {
-			filePath = filePath.substring(1, filePath.length - 1).trim();
-		}
-
+		filePath = cleanPath(filePath);
 		filePath = filePath.replace("file:///", "");
 
 		let embedType = determineEmbedType(filePath);
@@ -144,14 +154,7 @@ export function generateMediaView(
 	settings: typeof DEFAULT_SETTINGS = DEFAULT_SETTINGS
 ): string {
 	try {
-		let filePath: string = mediainfo.path;
-
-		if (filePath) {
-			filePath = filePath.trim();
-			if ((filePath.startsWith('"') && filePath.endsWith('"')) || (filePath.startsWith("'") && filePath.endsWith("'"))) {
-				filePath = filePath.substring(1, filePath.length - 1).trim();
-			}
-		}
+		let filePath: string = cleanPath(mediainfo.path);
 
 		if (!filePath) {
 			new Notice("File path not provided");

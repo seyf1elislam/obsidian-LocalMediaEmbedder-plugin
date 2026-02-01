@@ -1,7 +1,7 @@
 import { App, Editor, View, parseYaml } from "obsidian";
 import { MediaType, MediaBlockType } from "types";
 import { LocalMediaPluginSettings } from "settings";
-import { generateMediaView } from "functions";
+import { generateMediaView, cleanPath } from "functions";
 // @ts-ignore
 import Plyr from 'plyr';
 
@@ -46,14 +46,7 @@ export class MediaBlockProcessor {
 
 	private parseMediaInfo(source: string): MediaBlockType {
 		const parsed = parseYaml(source);
-		let path = parsed.path || parsed.inputpath;
-
-		if (path && typeof path === 'string') {
-			path = path.trim();
-			if ((path.startsWith('"') && path.endsWith('"')) || (path.startsWith("'") && path.endsWith("'"))) {
-				path = path.substring(1, path.length - 1).trim();
-			}
-		}
+		let path = cleanPath(parsed.path || parsed.inputpath);
 
 		if (!path || path.length < 3) {
 			throw new Error("Invalid path provided.");
