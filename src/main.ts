@@ -1,4 +1,4 @@
-import { embedMediaAsCodeBlock, onEditorMenu, formatTime, parseTime, insertVideoTimestamp } from "functions";
+import { embedMediaAsCodeBlock, onEditorMenu, insertVideoTimestamp } from "ui_generators";
 import { Plugin, Editor, Menu, Notice } from "obsidian";
 import {
 	LocalMediaPluginSettings,
@@ -6,9 +6,8 @@ import {
 	MyPluginSettingsTab,
 } from "settings";
 import { MediaBlockProcessor } from "media_blockproccessor";
-
-// @ts-ignore
-import Plyr from 'plyr';
+import { findActivePlayer, findPlayerById } from "player_manager";
+import Plyr from "plyr";
 
 export default class EmbedMediaPlugin extends Plugin {
 	settings: LocalMediaPluginSettings;
@@ -73,41 +72,17 @@ export default class EmbedMediaPlugin extends Plugin {
                     const activeLeaf = this.app.workspace.activeLeaf;
                     if (activeLeaf) {
                         const viewContent = activeLeaf.view.containerEl;
-                        const playerElements = viewContent.querySelectorAll('.plyr-player, .plyr');
-                        let targetPlayer: any = null;
+                        
+                        let targetPlayer: Plyr | null = null;
                         
                         // If we have a mediaId, find the exact player
-                        if (mediaId && mediaId !== "") {
-                            playerElements.forEach((el: any) => {
-                                 if (el.plyr) {
-                                     // Check for ID on original el, container, and media
-                                     const checks = [el, el.plyr.elements?.original, el.plyr.elements?.container, el.plyr.media];
-                                     for (const check of checks) {
-                                         if (check && check.getAttribute && check.getAttribute("data-media-id") === mediaId) {
-                                             targetPlayer = el.plyr;
-                                             break;
-                                         }
-                                     }
-                                 }
-                            });
+                        if (mediaId) {
+                            targetPlayer = findPlayerById(viewContent, mediaId);
                         }
                         
                         // Fallback to active/first player if no specific ID or not found
                         if (!targetPlayer) {
-                            playerElements.forEach((el: any) => {
-                                 if (el.plyr && el.plyr.playing) {
-                                    targetPlayer = el.plyr;
-                                 }
-                            });
-                            if (!targetPlayer) {
-                                // Find any first valid plyr
-                                for (let i = 0; i < playerElements.length; i++) {
-                                    if ((playerElements[i] as any).plyr) {
-                                        targetPlayer = (playerElements[i] as any).plyr;
-                                        break;
-                                    }
-                                }
-                            }
+                            targetPlayer = findActivePlayer(viewContent);
                         }
 
                         if (targetPlayer) {

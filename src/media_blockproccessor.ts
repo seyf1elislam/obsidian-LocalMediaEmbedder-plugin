@@ -1,7 +1,9 @@
 import { App, Editor, View, parseYaml } from "obsidian";
 import { MediaType, MediaBlockType } from "types";
 import { LocalMediaPluginSettings } from "settings";
-import { generateMediaView, cleanPath, resolvePaths } from "functions";
+import { generateMediaView } from "ui_generators";
+import { cleanPath } from "utils";
+import { resolvePaths } from "media_utils";
 // @ts-ignore
 import Plyr from 'plyr';
 
