@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-localmediaembedder-plugin",
-	"version": "0.1.2",
+	"version": "0.1.4",
 	"description": "An Obsidian.md plugin to ",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
