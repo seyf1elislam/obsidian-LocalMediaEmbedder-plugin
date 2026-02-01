@@ -7,17 +7,17 @@
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"lint": "eslint src/**/*.ts",
-		"lint:fix": "eslint src/**/*.ts --fix"
+		"lint:fix": "eslint src/**/*.ts --fix",
+		"test": "echo \"No tests defined\" && exit 0"
 	},
 	"keywords": [],
 	"author": "seyf1elislam",
 	"license": "MIT",
 	"devDependencies": {
-		"eslint": "^8.57.0",
-		"@eslint/js": "^8.57.0",
+		"eslint": "^9.30.1",
+		"@eslint/js": "^9.30.1",
 		"@types/node": "^16.11.6",
-		"@typescript-eslint/eslint-plugin": "5.29.0",
-		"@typescript-eslint/parser": "5.29.0",
+
 		"esbuild": "0.25.5",
 		"eslint-plugin-obsidianmd": "0.1.9",
 		"globals": "14.0.0",
