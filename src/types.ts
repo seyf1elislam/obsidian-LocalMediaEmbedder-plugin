@@ -7,4 +7,5 @@ export type MediaBlockType = {
 	height?: number | string;
 	aspectRatio?: number;
 	filter?: string;
+	view?: "list" | "grid";
 };

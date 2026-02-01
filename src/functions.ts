@@ -35,11 +35,16 @@ export function embedMediaAsCodeBlock(editor: Editor): void {
 path: ${filePath}
 type: ${embedType}
 `;
-		if (embedType === "video" || embedType === "iframe") {
+		if (embedType === "video" || embedType === "iframe" || embedType === "youtube") {
 			codeBlock += `width: ${640}
 height: ${360}
 `;
 		}
+
+        if (filePath.includes("*") || filePath.endsWith("/") || filePath.endsWith("\\")) {
+            codeBlock += `view: list
+`;
+        }
 
 		codeBlock += `\`\`\``;
 

@@ -20,15 +20,18 @@ export class MediaBlockProcessor {
 			const data: MediaBlockType = this.parseMediaInfo(source);
 			const resolvedPaths = resolvePaths(data, this.settings);
             
-            let combinedHtml = "";
+            const viewMode = data.view || "list";
+            let itemsHtml = "";
             for (const resolvedPath of resolvedPaths) {
                 const itemData = { ...data, path: resolvedPath };
-                combinedHtml += `<div class="local-media-item" style="margin-bottom: 20px;">
+                itemsHtml += `<div class="local-media-item">
                     ${generateMediaView(this.app, itemData, this.settings)}
                 </div>`;
             }
-            
-			el.innerHTML = combinedHtml;
+
+            el.innerHTML = `<div class="local-media-view-${viewMode}">
+                ${itemsHtml}
+            </div>`;
             
             // Initialize Plyr for the newly added elements
             const players = el.querySelectorAll('.plyr-player');
@@ -67,6 +70,7 @@ export class MediaBlockProcessor {
 			width: parsed.width,
 			height: parsed.height,
             filter: parsed.filter,
+            view: parsed.view as "list" | "grid",
 		};
 	}
 }
