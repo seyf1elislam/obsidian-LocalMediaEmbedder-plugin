@@ -1,5 +1,6 @@
 # Local Media Embedder Plugin
-![downloads](https://img.shields.io/github/downloads/seyf1elislam/obsidian-LocalMediaEmbedder-plugin/total)    ![License](https://img.shields.io/github/license/seyf1elislam/obsidian-LocalMediaEmbedder-plugin)
+![downloads](https://img.shields.io/github/downloads/seyf1elislam/obsidian-LocalMediaEmbedder-plugin/total)    ![License](https://img.shields.io/github/license/seyf1elislam/obsidian-LocalMediaEmbedder-plugin) ![GitHub Repo stars](https://img.shields.io/github/stars/seyf1elislam/obsidian-LocalMediaEmbedder-plugin)
+
 
 
 The Local Media Embedder plugin for Obsidian allows you to easily embed local media files (videos, audio) into your notes. This plugin enhances your note-taking experience by enabling seamless integration of multimedia content.
