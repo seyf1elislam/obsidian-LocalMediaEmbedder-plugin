@@ -13,3 +13,26 @@
     color: var(--text-accent-hover);
     text-decoration: none;
 }
+
+/* Custom sizing for Local Media Embedder */
+.local-media-container {
+    position: relative;
+    display: block;
+}
+
+.local-media-container .plyr {
+    height: 100%;
+    width: 100%;
+}
+
+.local-media-container .plyr--video {
+    height: 100%;
+}
+
+/* Override Plyr aspect ratio when specific height is set */
+.local-media-container[style*="height"] .plyr__video-embed, 
+.local-media-container[style*="height"] .plyr__video-wrapper--fixed-ratio {
+    height: 100% !important;
+    padding-bottom: 0 !important;
+    aspect-ratio: auto !important;
+}

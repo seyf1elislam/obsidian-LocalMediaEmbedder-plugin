@@ -3,10 +3,12 @@ import EmbedMediaPlugin from "main";
 
 export interface LocalMediaPluginSettings {
 	showInMenuItem: boolean;
+	maxEmbeds: number;
 }
 
 export const DEFAULT_SETTINGS: LocalMediaPluginSettings = {
 	showInMenuItem: true,
+	maxEmbeds: 10,
 };
 
 // Inspired by https://stackoverflow.com/a/50851710/13613783
@@ -116,5 +118,8 @@ export class MyPluginSettingsTab extends PluginSettingTab {
 	display(): void {
 		this.containerEl.empty();
 		this.addToggleSetting("showInMenuItem").setName("Show in Menu Item");
+		this.addNumberSetting("maxEmbeds")
+			.setName("Max embeds per block")
+			.setDesc("The maximum number of files to embed when using wildcards or folders.");
 	}
 }

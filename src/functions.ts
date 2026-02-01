@@ -1,5 +1,7 @@
 import { Notice, Editor, Menu, MenuItem, App } from "obsidian";
-import { DEFAULT_SETTINGS } from "settings";
+import * as fs from "fs";
+import * as path from "path";
+import { DEFAULT_SETTINGS, LocalMediaPluginSettings } from "settings";
 import { MediaBlockType, MediaType } from "types";
 
 export function cleanPath(path: string): string {
@@ -196,23 +198,112 @@ export function generateMediaView(
 		const height = mediainfo.height ?? 360;
         const mediaId = stringToHash(filePath);
 
+        const widthStyle = typeof width === 'number' ? `${width}px` : width;
+        const heightStyle = typeof height === 'number' ? `${height}px` : height;
+
+        let style = `width: ${widthStyle}; max-width: 100%;`;
+        if (embedType !== "audio") {
+            style += ` height: ${heightStyle};`;
+        }
+
+		let playerHtml = "";
 		if (embedType === "video") {
-			return `<video data-media-id="${mediaId}" class="plyr-player" playsinline controls width="${width}" height="${height}">
+			playerHtml = `<video data-media-id="${mediaId}" class="plyr-player" playsinline controls>
     <source src="${url}" type="video/mp4">
 </video>`;
 		} else if (embedType === "audio") {
-			return `<audio data-media-id="${mediaId}" class="plyr-player" controls>
+			playerHtml = `<audio data-media-id="${mediaId}" class="plyr-player" controls>
     <source src="${url}" type="audio/mpeg">
 </audio>`;
 		} else if (embedType === "youtube") {
-            return `<div data-media-id="${mediaId}" class="plyr-player plyr__video-embed" data-plyr-provider="youtube" data-plyr-embed-id="${url}"></div>`;
+            playerHtml = `<div data-media-id="${mediaId}" class="plyr-player plyr__video-embed" data-plyr-provider="youtube" data-plyr-embed-id="${url}"></div>`;
         } else {
-			return `<iframe data-media-id="${mediaId}" class="plyr-player" src="${url}" width="${width}" height="${height}" frameborder="0" allowfullscreen></iframe>`;
+			playerHtml = `<iframe data-media-id="${mediaId}" class="plyr-player" src="${url}" frameborder="0" allowfullscreen></iframe>`;
 		}
+
+        return `<div class="local-media-container" style="${style} margin: 0 auto; overflow: hidden;">
+            ${playerHtml}
+        </div>`;
 	} catch (error) {
 		console.log("Error:", error);
 		return "";
 	}
+}
+
+export function resolvePaths(mediainfo: MediaBlockType, settings: LocalMediaPluginSettings): string[] {
+    let folderPath = cleanPath(mediainfo.path);
+    if (folderPath.startsWith("file:///")) folderPath = folderPath.replace("file:///", "");
+    
+    // Check if it's a wildcard path
+    let filterPattern = mediainfo.filter;
+    let baseDir = folderPath;
+    let fileGlob = "";
+
+    const lastSlash = Math.max(folderPath.lastIndexOf("/"), folderPath.lastIndexOf("\\"));
+    if (folderPath.includes("*")) {
+        // Handle wildcards like C:\Videos\*.mp4
+        if (lastSlash !== -1) {
+            baseDir = folderPath.substring(0, lastSlash);
+            fileGlob = folderPath.substring(lastSlash + 1);
+        } else {
+            baseDir = "."; // Fallback to current dir if no slash, though unlikely for absolute paths
+            fileGlob = folderPath;
+        }
+        
+        // Convert glob to regex: * -> .*, . -> \. and anchor it
+        if (!filterPattern) {
+            filterPattern = "^" + fileGlob.replace(/\./g, "\\.").replace(/\*/g, ".*") + "$";
+        }
+    }
+
+    try {
+        if (!fs.existsSync(baseDir)) return [folderPath];
+        const stats = fs.statSync(baseDir);
+        
+        if (!stats.isDirectory()) {
+            return [folderPath];
+        }
+
+        const files = fs.readdirSync(baseDir);
+        let regex: RegExp | null = null;
+        if (filterPattern) {
+            try {
+                regex = new RegExp(filterPattern, "i");
+            } catch (e) {
+                new Notice("Invalid regex filter: " + filterPattern);
+            }
+        }
+
+        const resolvedPaths = files
+            .filter(file => {
+                const fullPath = path.join(baseDir, file);
+                try {
+                    if (fs.statSync(fullPath).isDirectory()) return false;
+                } catch (e) { return false; }
+
+                // If it was a wildcard, we MUST match the pattern
+                if (fileGlob && regex) {
+                    return regex.test(file);
+                }
+                
+                // If it's just a folder, we match by supported media types
+                const type = determineEmbedType(file);
+                const isMedia = type === "video" || type === "audio" || type === "youtube";
+                
+                if (regex) {
+                    return isMedia && regex.test(file);
+                }
+                return isMedia;
+            })
+            .sort() // Sort alphabetically
+            .map(file => path.join(baseDir, file))
+            .slice(0, settings.maxEmbeds);
+
+        return resolvedPaths.length > 0 ? resolvedPaths : [folderPath];
+    } catch (error) {
+        console.error("Error resolving paths:", error);
+        return [folderPath];
+    }
 }
 
 export function stringToHash(str: string): string {

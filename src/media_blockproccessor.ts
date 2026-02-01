@@ -1,7 +1,7 @@
 import { App, Editor, View, parseYaml } from "obsidian";
 import { MediaType, MediaBlockType } from "types";
 import { LocalMediaPluginSettings } from "settings";
-import { generateMediaView, cleanPath } from "functions";
+import { generateMediaView, cleanPath, resolvePaths } from "functions";
 // @ts-ignore
 import Plyr from 'plyr';
 
@@ -18,8 +18,17 @@ export class MediaBlockProcessor {
 	async run(source: string, el: HTMLElement) {
 		try {
 			const data: MediaBlockType = this.parseMediaInfo(source);
-			const type = data.type ? (data.type as MediaType) : "auto";
-			el.innerHTML = generateMediaView(this.app, data, this.settings);
+			const resolvedPaths = resolvePaths(data, this.settings);
+            
+            let combinedHtml = "";
+            for (const resolvedPath of resolvedPaths) {
+                const itemData = { ...data, path: resolvedPath };
+                combinedHtml += `<div class="local-media-item" style="margin-bottom: 20px;">
+                    ${generateMediaView(this.app, itemData, this.settings)}
+                </div>`;
+            }
+            
+			el.innerHTML = combinedHtml;
             
             // Initialize Plyr for the newly added elements
             const players = el.querySelectorAll('.plyr-player');
@@ -57,6 +66,7 @@ export class MediaBlockProcessor {
 			type: parsed.type as MediaType,
 			width: parsed.width,
 			height: parsed.height,
+            filter: parsed.filter,
 		};
 	}
 }
